@@ -21,7 +21,8 @@ console.log(1234)
 // Проверка, работает ли мой API-ключ
 
 // ID пользователя ВКонтакте
-const userId = '1';
+// const userId = '1';
+const userId = 'gog.ortey';
 
 fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&access_token=${accessToken}&v=5.130`)
     .then(res => res.json())
