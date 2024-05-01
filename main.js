@@ -3,6 +3,8 @@ import fs from 'fs';
 import https from 'https';
 import moment from 'moment';
 import crypto from 'crypto';
+import sharp from 'sharp';
+
 
 
 
@@ -59,6 +61,36 @@ function createFileName(hash) {
     return hash.slice(0, 10);
 }
 
+// !!! Оптимизировать !!!
+// Сжимает входящее изображение так, что макисмальная стороа составляет не больше 128 пикселей
+// async function resizeImage(data) {
+//     const MAX_SIZE = 128;
+//     const image = sharp(data);
+
+//     // Получаем метаданные изображения
+//     const metadata = await image.metadata();
+
+//     // Вычисляем новые размеры, сохраняя пропорции
+//     const width = metadata.width > metadata.height ? MAX_SIZE : Math.round(MAX_SIZE * metadata.width / metadata.height);
+//     const height = metadata.height > metadata.width ? MAX_SIZE : Math.round(MAX_SIZE * metadata.height / metadata.width);
+
+//     // Изменяем размер изображения
+//     const output = await image.resize(width, height).toBuffer();
+
+//     return output;
+// }
+
+
+async function resizeImage(data) {
+    const MAX_SIZE = 128;
+
+    // Изменяем размер изображения сразу при создании экземпляра Sharp
+    const output = await sharp(data)
+        .resize({ width: MAX_SIZE, height: MAX_SIZE, fit: 'inside' })
+        .toBuffer();
+
+    return output;
+}
 
 
 
@@ -85,6 +117,23 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
             https.get(photoUrl, response => {
                 let data = [];
             
+                // response.on('data', chunk => {
+                //     data.push(chunk);
+                // }).on('end', async () => {
+                //     let buffer = Buffer.concat(data); // Объединяем буферы в один
+                //     let resizedImage = await resizeImage(buffer); // Передаем один буфер в resizeImage
+                //     let hash = createHash(resizedImage);
+                //     console.log("hash = " + hash)
+                //     let fileName = createFileName(hash);
+                //     fileName += ' [' + postDate + '].jpg';
+            
+                //     fs.writeFile(`img/${fileName}`, resizedImage, err => { // Записываем сжатое изображение в файл
+                //         if (err) throw err;
+                //         console.log("Файл с именем " + fileName + " сохранён в папке img");
+                //     });
+                // });
+                // 2.2 секунды на этот запрос
+
                 response.on('data', chunk => {
                     data.push(chunk);
                 }).on('end', () => {
@@ -93,12 +142,13 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
                     console.log("hash = " + hash)
                     let fileName = createFileName(hash);
                     fileName += ' [' + postDate + '].jpg';
-            
+
                     fs.writeFile(`img/${fileName}`, buffer, err => {
                         if (err) throw err;
                         console.log("Файл с именем " + fileName + " сохранён в папке img");
                     });
                 });
+                // В среднем - 2.1 секунды на этот запрос
             });
         }
     });
