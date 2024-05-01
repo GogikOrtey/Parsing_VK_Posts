@@ -34,45 +34,70 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
     .then(res => res.json())
     .then(json => {
         // Проверяем, есть ли в посте фотографии
-        if ('attachments' in json.response.items[0] && json.response.items[0].attachments[0].type === 'photo') {
-            // Получаем URL фотографии с максимальным разрешением
-            const photo = json.response.items[0].attachments[0].photo;
-            const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+        if ('attachments' in json.response.items[0]) {
+            const attachments = json.response.items[0].attachments;
+            const photos = attachments.filter(attachment => attachment.type === 'photo');
+            
+            let bool_ismultiplyPhotosInThePost = false; // = true, если в посте > 1 фотографии
+            let countImage = 1;
 
-            // Получаем дату публикации поста
-            const postDate = moment.unix(json.response.items[0].date).format('DD.MM.YYYY');
+            if (photos.length > 1) {
+                console.log("📚 В посте несколько фотографий");
+                bool_ismultiplyPhotosInThePost = true;
+            }
 
-            // В среднем - 2.2 секунды на этот запрос
-            https.get(photoUrl, response => {
-                let data = [];
+            console.log(" ")
 
-                response.on('data', chunk => {
-                    data.push(chunk);
-                }).on('end', () => {
-                    let buffer = Buffer.concat(data);       // Собираем кусочки изображения в одно
-                    
-                    let hash = createHash(buffer);          // Вычисляем хеш изображения
-                    console.log("hash = " + hash)
+            // Для всех изображений, в полученном наборе:
+            photos.forEach(photoAttachment => {                
 
-                    let fileName = createFileName(hash);    // Задаю имя для изображения
-                    fileName += ' [' + postDate + '].jpg';
+                // Получаем URL фотографии с максимальным разрешением
+                const photo = photoAttachment.photo;
+                const photoUrl = photo.sizes[photo.sizes.length - 1].url;
 
-                    let path = `img/${fileName}`;           // Путь, куда картинка будет сохранена
+                // Получаем дату публикации поста
+                const postDate = moment.unix(json.response.items[0].date).format('DD.MM.YYYY');
 
-                    // Кидаю предупреждение, если такой файл уже есть в этой папке
-                    if (fs.existsSync(path)) {
-                        console.log("⚠️ Файл с именем " + fileName + " уже существует в папке img, и будет заменён");
-                    }                    
+                // В среднем - 2.2 секунды на этот запрос
+                https.get(photoUrl, response => {
+                    let data = [];
 
-                    // Сохраняю это изображение в папке img
-                    fs.writeFile(path, buffer, err => {
-                        if (err) throw err;
-                        console.log("✅ Файл с именем " + fileName + " сохранён в папке img");
+                    response.on('data', chunk => {
+                        data.push(chunk);
+                    }).on('end', () => {
+                        let buffer = Buffer.concat(data);       // Собираем кусочки изображения в одно
+
+                        let hash = createHash(buffer);          // Вычисляем хеш изображения
+                        console.log("hash = " + hash)
+
+                        let fileName = ' [' + postDate + '] ';  // Задаю имя для изображения
+                        if(bool_ismultiplyPhotosInThePost === true) {
+                            // Если изображений несколько, то для каждого задаю его номер в посте
+                            fileName += "- " + countImage + " ";
+                            countImage++;
+                        }
+                        fileName += createFileName(hash) + ".jpg";    
+                        
+
+                        let path = `img/${fileName}`;           // Путь, куда картинка будет сохранена
+
+                        // Кидаю предупреждение, если такой файл уже есть в этой папке
+                        if (fs.existsSync(path)) {
+                            console.log("⚠️ Файл с именем " + fileName + " уже существует в папке img, и будет заменён");
+                        }
+
+                        // Сохраняю это изображение в папке img
+                        fs.writeFile(path, buffer, err => {
+                            if (err) throw err;
+                            console.log("✅ Файл с именем " + fileName + " сохранён в папке img");
+                        });
                     });
-                });                
+                });
             });
         }
     });
+
+
 
 
 
