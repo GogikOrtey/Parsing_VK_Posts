@@ -1,7 +1,8 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 import https from 'https';
-import moment  from 'moment';
+import moment from 'moment';
+import crypto from 'crypto';
 
 
 
@@ -48,8 +49,20 @@ const randomFileName = generateRandomString(10) + '.jpg';
 
 
 
+// Функция для создания хеша изображения
+function createHash(buffer) {
+    return crypto.createHash('sha256').update(buffer).digest('hex');
+}
 
-// ——————————————————————
+// Функция для создания имени файла из хеша
+function createFileName(hash) {
+    return hash.slice(0, 10);
+}
+
+
+
+
+
 // Получаем последний пост из группы
 fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_token=${accessToken}&v=5.130`)
     .then(res => res.json())
@@ -60,21 +73,35 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
             const photo = json.response.items[0].attachments[0].photo;
             const photoUrl = photo.sizes[photo.sizes.length - 1].url;
 
+            // Получаем дату публикации поста
+            const postDate = moment.unix(json.response.items[0].date).format('DD.MM.YYYY');
+
+            // Генерируем случайное имя файла
+            //const randomFileName = generateRandomString(10) + ' [' + postDate + '].jpg';
+
             // Скачиваем фотографию
-            const file = fs.createWriteStream(`img/${randomFileName}`);
+            //const file = fs.createWriteStream(`img/${randomFileName}`);
+
             https.get(photoUrl, response => {
-                response.pipe(file);
-                console.log("Файл с именем " + randomFileName + " сохранён в папке img")
+                let data = [];
+            
+                response.on('data', chunk => {
+                    data.push(chunk);
+                }).on('end', () => {
+                    let buffer = Buffer.concat(data);
+                    let hash = createHash(buffer);
+                    console.log("hash = " + hash)
+                    let fileName = createFileName(hash);
+                    fileName += ' [' + postDate + '].jpg';
+            
+                    fs.writeFile(`img/${fileName}`, buffer, err => {
+                        if (err) throw err;
+                        console.log("Файл с именем " + fileName + " сохранён в папке img");
+                    });
+                });
             });
         }
     });
-
-
-
-
-
-
-
 
 
 
