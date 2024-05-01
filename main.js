@@ -56,7 +56,10 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
                 const photoUrl = photo.sizes[photo.sizes.length - 1].url;
 
                 // Получаем дату публикации поста
-                const postDate = moment.unix(json.response.items[0].date).format('DD.MM.YYYY');
+                //const postDate = moment.unix(json.response.items[0].date).format('DD.MM.YYYY');
+                const postDateTime = moment.unix(json.response.items[0].date).format('DD.MM.YYYY HH⁚mm');
+                // const postDateTime = moment.unix(json.response.items[0].date).format('DD.MM.YYYY HH⁝mm');
+
 
                 // В среднем - 2.2 секунды на этот запрос
                 https.get(photoUrl, response => {
@@ -68,9 +71,9 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_to
                         let buffer = Buffer.concat(data);       // Собираем кусочки изображения в одно
 
                         let hash = createHash(buffer);          // Вычисляем хеш изображения
-                        console.log("hash = " + hash)
+                        //console.log("hash = " + hash)
 
-                        let fileName = ' [' + postDate + '] ';  // Задаю имя для изображения
+                        let fileName = ' [' + postDateTime + '] ';  // Задаю имя для изображения
                         if(bool_ismultiplyPhotosInThePost === true) {
                             // Если изображений несколько, то для каждого задаю его номер в посте
                             fileName += "- " + countImage + " ";
