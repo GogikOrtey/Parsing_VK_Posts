@@ -20,36 +20,36 @@ console.log(1234)
 // ——————————————————————
 // Проверка, работает ли мой API-ключ
 
-// ID пользователя ВКонтакте
-// const userId = '1';
-const userId = 'gog.ortey';
+// // ID пользователя ВКонтакте
+// //const userId = '1';
+// const userId = 'gog.ortey';
 
-fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&access_token=${accessToken}&v=5.130`)
-    .then(res => res.json())
-    .then(json => console.log(json));
-
-
-
-
-
-
-
-
-// // Получаем последний пост из группы
-// fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_token=${accessToken}&v=5.130`)
+// fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&access_token=${accessToken}&v=5.130`)
 //     .then(res => res.json())
-//     .then(json => {
-//         // Проверяем, есть ли в посте фотографии
-//         if ('attachments' in json.response.items[0] && json.response.items[0].attachments[0].type === 'photo') {
-//             // Получаем URL фотографии с максимальным разрешением
-//             const photo = json.response.items[0].attachments[0].photo;
-//             const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+//     .then(json => console.log(json));
 
-//             // Скачиваем фотографию
-//             const file = fs.createWriteStream('img/photo.jpg');
-//             https.get(photoUrl, response => {
-//                 response.pipe(file);
-//             });
-//         }
-//  });
+
+
+
+
+
+
+// ——————————————————————
+// Получаем последний пост из группы
+fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&access_token=${accessToken}&v=5.130`)
+    .then(res => res.json())
+    .then(json => {
+        // Проверяем, есть ли в посте фотографии
+        if ('attachments' in json.response.items[0] && json.response.items[0].attachments[0].type === 'photo') {
+            // Получаем URL фотографии с максимальным разрешением
+            const photo = json.response.items[0].attachments[0].photo;
+            const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+
+            // Скачиваем фотографию
+            const file = fs.createWriteStream('img/photo.jpg');
+            https.get(photoUrl, response => {
+                response.pipe(file);
+            });
+        }
+ });
 
