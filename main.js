@@ -30,9 +30,10 @@ function createFileName(hash) {
 
 
 // Получаем последние посты из группы
-// Здесь, "count=" - это количество постов, которые вернёт нам сервер
+// Здесь, "count=" - это количество постов, которые вернёт нам сервер max=100
+// "offset=_" - это сдвиг, относительно которого нам сервер отправит посты
 
-fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=2&access_token=${accessToken}&v=5.130`)
+fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=1&offset=1&access_token=${accessToken}&v=5.130`)
     .then(res => res.json())
     .then(json => {
 
@@ -42,76 +43,79 @@ fetch(`https://api.vk.com/method/wall.get?owner_id=-${groupId}&count=2&access_to
             // Выводим всю информацию о посте
             console.log("📚 Информация о посте: ", item);
 
-            // Проверяем, есть ли в посте фотографии
-            if ('attachments' in item) {
-                const attachments = item.attachments;
-                const photos = attachments.filter(attachment => attachment.type === 'photo');
+            // Проверяем, есть ли в посте фотографии или пересланные посты
+            let attachments = 'attachments' in item ? item.attachments : [];
+            if ('copy_history' in item && item.copy_history.length > 0 
+                && 'attachments' in item.copy_history[0]) {
+                attachments = attachments.concat(item.copy_history[0].attachments);
+            }
 
-                let bool_ismultiplyPhotosInThePost = false; // = true, если в посте > 1 фотографии
-                let countImage = 1;
+            const photos = attachments.filter(attachment => attachment.type === 'photo');
 
-                // !!! Проверка на то, есть ли в посте текст
-                // !!! Проверка на то, какой тип контента есть в посте (фото, видео, и т.д.)
+            let bool_ismultiplyPhotosInThePost = false; // = true, если в посте > 1 фотографии
+            let countImage = 1;
 
-                if (photos.length > 1) {
-                    console.log("📚 В посте несколько фотографий");
-                    bool_ismultiplyPhotosInThePost = true;
-                }
+            // !!! Проверка на то, есть ли в посте текст
+            // !!! Проверка на то, какой тип контента есть в посте (фото, видео, и т.д.)
 
-                console.log(" ")
+            if (photos.length > 1) {
+                console.log("📚 В посте несколько фотографий");
+                bool_ismultiplyPhotosInThePost = true;
+            }
 
-                // Для всех изображений, в полученном наборе:
-                photos.forEach(photoAttachment => {
-                    // Выводим всю информацию о фотографии
-                    //console.log("📚 Информация о фотографии: ", photoAttachment.photo);
+            console.log(" ")
 
-                    // Получаем URL фотографии с максимальным разрешением
-                    const photo = photoAttachment.photo;
-                    const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+            // Для всех изображений, в полученном наборе:
+            photos.forEach(photoAttachment => {
+                console.log("")
 
-                    // Получаем дату публикации поста
-                    //const postDate = moment.unix(item.date).format('DD.MM.YYYY');
-                    const postDateTime = moment.unix(item.date).format('DD.MM.YYYY HH⁚mm');
-                    // const postDateTime = moment.unix(item.date).format('DD.MM.YYYY HH⁝mm');
+                // Выводим всю информацию о фотографии
+                //console.log("📚 Информация о фотографии: ", photoAttachment.photo);
 
+                // Получаем URL фотографии с максимальным разрешением
+                const photo = photoAttachment.photo;
+                const photoUrl = photo.sizes[photo.sizes.length - 1].url;
 
-                    // В среднем - 2.2 секунды на этот запрос
-                    https.get(photoUrl, response => {
-                        let data = [];
+                // Получаем дату публикации поста
+                //const postDate = moment.unix(item.date).format('DD.MM.YYYY');
+                const postDateTime = moment.unix(item.date).format('DD.MM.YYYY HH⁚mm');
+                // const postDateTime = moment.unix(item.date).format('DD.MM.YYYY HH⁝mm');
 
-                        response.on('data', chunk => {
-                            data.push(chunk);
-                        }).on('end', () => {
-                            let buffer = Buffer.concat(data);       // Собираем кусочки изображения в одно
+                // В среднем - 2.2 секунды на этот запрос
+                https.get(photoUrl, response => {
+                    let data = [];
 
-                            let hash = createHash(buffer);          // Вычисляем хеш изображения
-                            //console.log("hash = " + hash)
+                    response.on('data', chunk => {
+                        data.push(chunk);
+                    }).on('end', () => {
+                        let buffer = Buffer.concat(data);       // Собираем кусочки изображения в одно
 
-                            let fileName = ' [' + postDateTime + '] ';  // Задаю имя для изображения
-                            if (bool_ismultiplyPhotosInThePost === true) {
-                                // Если изображений несколько, то для каждого задаю его номер в посте
-                                fileName += "- " + countImage + " ";
-                                countImage++;
-                            }
-                            fileName += createFileName(hash) + ".jpg";
+                        let hash = createHash(buffer);          // Вычисляем хеш изображения
+                        //console.log("hash = " + hash)
 
+                        let fileName = ' [' + postDateTime + '] ';  // Задаю имя для изображения
+                        if (bool_ismultiplyPhotosInThePost === true) {
+                            // Если изображений несколько, то для каждого задаю его номер в посте
+                            fileName += "- " + countImage + " ";
+                            countImage++;
+                        }
+                        fileName += createFileName(hash) + ".jpg";
 
-                            let path = `img/${fileName}`;           // Путь, куда картинка будет сохранена
+                        let path = `img/${fileName}`;           // Путь, куда картинка будет сохранена
 
-                            // Кидаю предупреждение, если такой файл уже есть в этой папке
-                            if (fs.existsSync(path)) {
-                                console.log("⚠️ Файл с именем " + fileName + " уже существует в папке img, и будет заменён");
-                            }
+                        // Кидаю предупреждение, если такой файл уже есть в этой папке
+                        if (fs.existsSync(path)) {
+                            console.log("⚠️ Файл с именем " + fileName + " уже существует в папке img, и будет заменён");
+                        }
 
-                            // Сохраняю это изображение в папке img
-                            fs.writeFile(path, buffer, err => {
-                                if (err) throw err;
-                                console.log("✅ Файл с именем " + fileName + " сохранён в папке img");
-                            });
+                        // Сохраняю это изображение в папке img
+                        fs.writeFile(path, buffer, err => {
+                            if (err) throw err;
+                            console.log("✅ Файл с именем " + fileName + " сохранён в папке img");
                         });
                     });
                 });
-            }
+            });
         });
     });
 
