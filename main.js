@@ -4,6 +4,7 @@ import https from 'https';
 import moment from 'moment';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import axios from 'axios';
 
 
 
@@ -70,9 +71,10 @@ v=5.130`)
             // Получаем дату публикации поста
             const postDateTime = moment.unix(item.date).format('YYYY.MM.DD HH⁚mm');
 
-                /*////////////////////////////////////
-                //      Обработка фото в посте      //
-                ////////////////////////////////////*/
+            /*////////////////////////////////////
+            //      Обработка фото в посте      //
+            ////////////////////////////////////*/
+
 
             // Проверяем, есть ли в посте фотографии или пересланные посты
             let attachments = 'attachments' in item ? item.attachments : [];
@@ -90,15 +92,17 @@ v=5.130`)
 
             let bool_ismultiplyPhotosInThePost = false; // = true, если в посте > 1 фотографии
             let countImage = 1;
-            
+
             if (photos.length > 1) {
                 console.log("📚 В посте несколько фотографий");
                 bool_ismultiplyPhotosInThePost = true;
             }
 
-                /*////////////////////////////////////
-                //     Обработка текста в посте     //
-                ////////////////////////////////////*/
+
+            /*////////////////////////////////////
+            //     Обработка текста в посте     //
+            ////////////////////////////////////*/
+
 
             // Проверяем, есть ли в посте текст
             let postText = 'text' in item ? item.text : '';
@@ -107,9 +111,9 @@ v=5.130`)
                 if ('text' in item.copy_history[0]) {
 
                     // Совмещаем текстовые описания поста и вложенного поста
-                    if(postText != '' && (item.copy_history[0].text != '')) {
+                    if (postText != '' && (item.copy_history[0].text != '')) {
                         postText += '\n——————————————————————\n' + item.copy_history[0].text;
-                    } else if(postText == '' && (item.copy_history[0].text != '')) {
+                    } else if (postText == '' && (item.copy_history[0].text != '')) {
                         postText += item.copy_history[0].text;
                     }
                 }
@@ -117,7 +121,7 @@ v=5.130`)
 
             if (postText != '') {
                 let fileName = '[' + postDateTime + ']';
-                let path = `img/${fileName}.txt`; 
+                let path = `img/${fileName}.txt`;
 
                 // Сохраняю этот текст в папке img
                 fs.writeFile(path, postText, err => {
@@ -130,21 +134,20 @@ v=5.130`)
                     // Устанавливаю время создания файла
                     fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
                         if (err) throw err;
-                        if(bool_isinfoShow) console.log("⏰ Время создания файла " + fileName + 
+                        if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
                             " установлено на " + postDateTime);
                     });
                 });
             }
 
-
-                /*////////////////////////////////////
-                //              Другое              //
-                ////////////////////////////////////*/
+            /*////////////////////////////////////
+            //              Другое              //
+            ////////////////////////////////////*/
 
             // Обрабатываем каждое вложение, и выводим его тип контента                                   
             attachments.forEach(attachment => {
                 // Выводим тип контента
-                console.log(`Пост №${int_insCountOfThePost} Тип контента: `, attachment.type);                
+                console.log(`Пост №${int_insCountOfThePost} Тип контента: `, attachment.type);
             });
             console.log("") 
 
@@ -158,6 +161,9 @@ v=5.130`)
 
 
 
+            /*////////////////////////////////////////////////////////
+            //                   Сохранение фото                    //
+            /////////////////////////////////////////////////////// */
 
             // Для всех изображений, в полученном наборе:
             photos.forEach(photoAttachment => {
@@ -224,6 +230,87 @@ v=5.130`)
                     });
                 });
             });
+
+            /*/////////////////////////////////////////////////////////
+            //                   Сохранение видео                    //
+            //////////////////////////////////////////////////////// */
+
+            // Получаем все видео вложения
+            const videos = attachments.filter(attachment => attachment.type === 'video');
+
+            // Для всех видео вложений, в полученном наборе:
+            videos.forEach(videoAttachment => {
+                // Получаем URL видео
+
+                const videoInfo = json.response.items[0];
+                const video = videoAttachment.video;
+
+                //fuGetVideo(video, videoInfo);
+
+                // Создаем URL страницы ВКонтакте с видео
+                const videoPageUrl = `https://vk.com/video${video.owner_id}_${video.id}`;
+
+                console.log(videoPageUrl); // URL страницы ВКонтакте с видео
+
+                //fGetVideo2(videoPageUrl, int_insCountOfThePost).then(() => console.log('Видео успешно скачано!'));
+
+                let vid2 = '' + video.owner_id + '_' + video.id;
+
+                getVideoLink(vid2).then(console.log).catch(console.error);
+
+
+                // let maxResolution = 0;
+                // let videoUrl = '';
+
+                // console.log(videos)
+
+                // for (let resolution in video.files) {
+                //     let currentResolution = parseInt(resolution.replace('mp4_', ''));
+                //     if (currentResolution > maxResolution) {
+                //         maxResolution = currentResolution;
+                //         videoUrl = video.files[resolution];
+                //     }
+                // }
+
+                // console.log(videoUrl); // URL видео с наибольшим разрешением
+
+                // // Запрашиваем видео по ссылке, полученной из поста
+                // https.get(videoUrl, response => {
+                //     let data = [];
+
+                //     response.on('data', chunk => {
+                //         data.push(chunk);
+                //     }).on('end', () => {
+                //         let buffer = Buffer.concat(data); // Собираем кусочки видео в одно
+
+                //         let fileName = '[' + postDateTime + ']'; // Задаём имя для видео
+                //         fileName += ".mp4"; // Имя видео файла
+
+                //         let path = `videos/${fileName}`; // Путь, куда видео будет сохранено
+
+                //         // Кидаем предупреждение, если такой файл уже есть в этой папке
+                //         if (fs.existsSync(path)) {
+                //             console.log("⚠️ Файл с именем " + fileName + " уже существует в папке videos, и будет заменён");
+                //         }
+
+                //         // Сохраняем это видео в папке videos
+                //         fs.writeFile(path, buffer, err => {
+                //             if (err) throw err;
+                //             console.log("🎦 Видео с именем " + fileName + " сохранён в папке videos");
+
+                //             // Получаем timestamp из postDateTime
+                //             let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                //             // Устанавливаем время создания файла
+                //             fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+                //                 if (err) throw err;
+                //                 console.log("⏰ Время создания файла " + fileName +
+                //                     " установлено на " + postDateTime);
+                //             });
+                //         });
+                //     });
+                // });
+            });
         });
     });
 
@@ -239,12 +326,52 @@ v=5.130`)
 // • Сделать автозагрузку постов, например по 20 штук
 
 
+// Выводит в консоль URL страницы ВКонтакте с этим видео
+function fGetVideo(video, videoInfo) {
+fetch(`https://api.vk.com/method/video.get?
+owner_id=${video.owner_id}&
+videos=${video.owner_id}_${video.id}&
+access_token=${accessToken}&
+v=5.130`)
 
+    .then(res => res.json())
+    .then(json => {
+        //const videoInfo = json.response.items[0];
+        console.log(videoInfo.player); // URL страницы ВКонтакте с видео
+    });
+}
 
+// Пытаестя скачать видео, по прямой сслыке
+async function fGetVideo2(videoURL, nameFile) {
+    // let url = 'https://vk.com/video-179997490_456242052'; // URL видео
+    let response = await axios.get(videoURL, {responseType: 'stream'});
+    let writer = fs.createWriteStream('video/video ' + nameFile + '.mp4');
 
+    response.data.pipe(writer);
 
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
 
+async function getVideoLink(videoId) {
+    //const videoId = '-179997490_456242052'; // ID видео
+    console.log("Скачиваем видео: " + videoId)
 
+    const response = await axios.get(
+`https://api.vk.com/method/video.get?
+videos=${videoId}&
+access_token=${accessToken}&
+v=5.130`);
+
+    if (response.data.response && response.data.response.items && response.data.response.items.length > 0) {
+        const video = response.data.response.items[0];
+        return video.player; // Ссылка на видео
+    } else {
+        throw new Error('Видео не найдено');
+    }
+}
 
 
 
