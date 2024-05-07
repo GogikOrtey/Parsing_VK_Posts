@@ -61,9 +61,24 @@ import puppeteer from 'puppeteer-core';
         console.log('Браузер успешно открыт');
 
         const page = await browser.newPage();
-        await page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd');
 
-        console.log('Идём дальше');
+        const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
+        const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+    
+        const result = await Promise.race([pagePromise, timeoutPromise]);
+    
+        if (result === pagePromise) {
+          console.log('Страница загружена');
+          // Ваш код здесь...
+        } else {
+          console.log('Время ожидания истекло');
+          // Обработайте ошибку загрузки страницы
+        }
+
+        // setTimeout(() => {
+        //     console.log('Идём дальше');
+        //     // Ваш код здесь...
+        // }, 5000); // Выполняем код через 5 секунд
 
         setTimeout(() => {
             console.log('вставляем текстовую строку в поле ввода с id="url"');
@@ -71,13 +86,16 @@ import puppeteer from 'puppeteer-core';
             page.evaluate(() => {
                 document.querySelector('#url').value = 'https://vk.com/video-72495085_456242529';
             });
+
+            setTimeout(() => {
+                console.log('инициируем нажатие на кнопку с id="DownloadMP4HD"')
+                // инициируем нажатие на кнопку с id="DownloadMP4HD"
+                page.click('#DownloadMP4HD');
+            }, 500);
+            
         }, 5000);
 
-        setTimeout(() => {
-            console.log('инициируем нажатие на кнопку с id="DownloadMP4HD"')
-            // инициируем нажатие на кнопку с id="DownloadMP4HD"
-            page.click('#DownloadMP4HD');
-        }, 500);
+
 
 
     } catch (error) {
