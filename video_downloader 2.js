@@ -40,9 +40,28 @@ import puppeteer from 'puppeteer-core';
 
 
 
+// Загрузка работает даже в фоновом режиме, без открытия окна браузера
+// Нужно продумать, как лучше организовать работу с вкладками
+// Наверное, через 1 секунду после последней строчки закрыть вкладку, и затем открыть новую
 
 
+// Возможно код, для переименования загруженного файла:
 
+/*
+    page.on('download', async (download) => {
+  console.log('Загрузка началась:', download.url());
+
+  // Дождитесь завершения загрузки
+  await download.on('end', () => {
+    const filename = download.filename(); // Получить имя файла
+    const newFilename = 'name file 1.mp4'; // Задать новое имя
+
+    // Переименовать файл
+    await fs.rename(filename, newFilename);
+    console.log('Файл переименован:', newFilename);
+  });
+});
+*/
 
 
 
@@ -56,13 +75,14 @@ import puppeteer from 'puppeteer-core';
     try {
         const browser = await puppeteer.launch({
             executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', // замените на путь к вашему Edge
-            headless: false // открывает браузер в режиме с графическим интерфейсом
+            //headless: false // открывает браузер в режиме с графическим интерфейсом
         });
         console.log('Браузер успешно открыт');
 
         const page = await browser.newPage();
 
-        const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
+        const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', 
+        { waitUntil: 'load' });
         const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
     
         const result = await Promise.race([pagePromise, timeoutPromise]);
@@ -74,11 +94,6 @@ import puppeteer from 'puppeteer-core';
           console.log('Время ожидания истекло');
           // Обработайте ошибку загрузки страницы
         }
-
-        // setTimeout(() => {
-        //     console.log('Идём дальше');
-        //     // Ваш код здесь...
-        // }, 5000); // Выполняем код через 5 секунд
 
         setTimeout(() => {
             console.log('вставляем текстовую строку в поле ввода с id="url"');
@@ -92,11 +107,8 @@ import puppeteer from 'puppeteer-core';
                 // инициируем нажатие на кнопку с id="DownloadMP4HD"
                 page.click('#DownloadMP4HD');
             }, 500);
-            
+
         }, 5000);
-
-
-
 
     } catch (error) {
         console.error('Произошла Ошибка:', error);
