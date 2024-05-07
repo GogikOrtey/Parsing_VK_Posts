@@ -8,6 +8,48 @@ import puppeteer from 'puppeteer-core';
 
 
 
+// const browser = await puppeteer.launch({
+//     executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', // замените на путь к вашему Edge
+//     headless: false // открывает браузер в режиме с графическим интерфейсом
+// });
+// console.log('Браузер успешно открыт');
+// // Закрываем браузер после 5 секунд
+
+// const page = browser.newPage();
+// page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd');
+
+// setTimeout(() => {
+//     console.log('вставляем текстовую строку в поле ввода с id="url"');
+//     // вставляем текстовую строку в поле ввода с id="url"
+//     page.evaluate(() => {
+//         document.querySelector('#url').value = 'https://vk.com/video-72495085_456242529';
+//     });
+// }, 5000);
+
+// setTimeout(() => {
+//     console.log('инициируем нажатие на кнопку с id="DownloadMP4HD"')
+//     // инициируем нажатие на кнопку с id="DownloadMP4HD"
+//     page.click('#DownloadMP4HD');
+// }, 500);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (async () => {
@@ -17,14 +59,27 @@ import puppeteer from 'puppeteer-core';
             headless: false // открывает браузер в режиме с графическим интерфейсом
         });
         console.log('Браузер успешно открыт');
-        // Закрываем браузер после 5 секунд
 
         const page = await browser.newPage();
-        await page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd'); 
-        // setTimeout(() => {
-        //     browser.close();
-        //     console.log('Браузер закрыт');
-        // }, 5000);
+        await page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd');
+
+        console.log('Идём дальше');
+
+        setTimeout(() => {
+            console.log('вставляем текстовую строку в поле ввода с id="url"');
+            // вставляем текстовую строку в поле ввода с id="url"
+            page.evaluate(() => {
+                document.querySelector('#url').value = 'https://vk.com/video-72495085_456242529';
+            });
+        }, 5000);
+
+        setTimeout(() => {
+            console.log('инициируем нажатие на кнопку с id="DownloadMP4HD"')
+            // инициируем нажатие на кнопку с id="DownloadMP4HD"
+            page.click('#DownloadMP4HD');
+        }, 500);
+
+
     } catch (error) {
         console.error('Произошла Ошибка:', error);
     }
