@@ -434,6 +434,7 @@ if (IsSearchable) {
     index = TaskCounter;
     ++TaskCounter;
     var UrlToConvert = "";
+    UrlToConvert = "https://vk.com/video-72495085_456242529";
     if (typeof url !== "undefined") { UrlToConvert = url } else {
         UrlToConvert = document.getElementById("url").value;
         document.getElementById("url").value = ""
