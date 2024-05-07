@@ -417,7 +417,7 @@ var MP3WaitBetweenTasks = 3e3;
 var MP4WaitBetweenTasks = 6e3;
 var suggestCallBack;
 if (IsSearchable) {
-    $(document).ready(function () {
+    $(document).ready(function () { 
         $("#url").autocomplete({
             source: function (request, response) {
                 if (!request.term.startsWith("http") && !request.term.startsWith("www")) { $.getJSON("https://suggestqueries.google.com/complete/search?callback=?", { hl: "en", ds: "yt", jsonp: "suggestCallBack", q: request.term, client: "youtube" }) } else { response([]) } suggestCallBack = function (data) {
