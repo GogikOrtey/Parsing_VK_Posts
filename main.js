@@ -67,7 +67,7 @@ let currDateTime = moment().format('YYYY.MM.DD HH⁚mm');
 // currDateTime = currDateTime.replace(':', 'H')
 // currDateTime = currDateTime.replace(';', 'm')
 let nameFlMainSession = mainPath + 'Session [' + currDateTime + ']';
-
+ 
 // Проверяю, существуют ли такая папка
 if (fs.existsSync(nameFlMainSession)) {
     // Если да - то останавливаю программу
