@@ -388,6 +388,15 @@ v=5.130`)
             // Получаем все видео вложения
             const videos = attachments.filter(attachment => attachment.type === 'video');
 
+            if(videos != '') {
+                if(goodPostText != '') {
+                    // Если в посте есть текст, добавляем его в название к видео, после даты:
+                    fs.appendFileSync(txtFile_allVideoLinks, '\n[' + postDateTime + '] ' + goodPostText + '\n');
+                } else {                
+                    fs.appendFileSync(txtFile_allVideoLinks, '\n[' + postDateTime + ']\n');
+                }
+            }
+
             // Для всех видео вложений, в полученном наборе:
             videos.forEach(videoAttachment => {
                 // Получаем URL видео
@@ -401,9 +410,13 @@ v=5.130`)
                 const videoPageUrl = `https://vk.com/video${video.owner_id}_${video.id}`;
 
                 console.log(videoPageUrl); // URL страницы ВКонтакте с видео
-                
+
                 // Добавляем строку с этим URL в .txt файл
                 // А также дату и время поста
+
+                let nameStr = videoPageUrl + '\n'
+
+                fs.appendFileSync(txtFile_allVideoLinks, nameStr);
 
             });
         });
