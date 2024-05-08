@@ -15,7 +15,7 @@ const accessToken = '37382a8c37382a8c37382a8ca9342001943373837382a8c5108cd6d7153
 
 console.log(" ")
 console.log("———————————————————————————————————————————————————————————")
-console.log("v0.2")
+console.log("v0.3")
 console.log("")
 console.log("Вас приветствует программа загрузки контента из ВК!")
 console.log("")
