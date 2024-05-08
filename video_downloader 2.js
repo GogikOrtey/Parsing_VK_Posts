@@ -36,7 +36,7 @@ import puppeteer from 'puppeteer-core';
 
 
 
-
+// !!! В Gemini был код, как захватить скачанный файл. Посмотреть
 
 
 

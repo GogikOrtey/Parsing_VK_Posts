@@ -84,11 +84,66 @@ async function resizeImage(data) {
 
 
 
+// Выводит в консоль URL страницы ВКонтакте с этим видео
+function fGetVideo(video, videoInfo) {
+    fetch(`https://api.vk.com/method/video.get?
+    owner_id=${video.owner_id}&
+    videos=${video.owner_id}_${video.id}&
+    access_token=${accessToken}&
+    v=5.130`)
+
+        .then(res => res.json())
+        .then(json => {
+            //const videoInfo = json.response.items[0];
+            console.log(videoInfo.player); // URL страницы ВКонтакте с видео
+        });
+}
+
+// Пытаестя скачать видео, по прямой сслыке
+async function fGetVideo2(videoURL, nameFile) {
+    // let url = 'https://vk.com/video-179997490_456242052'; // URL видео
+    let response = await axios.get(videoURL, { responseType: 'stream' });
+    let writer = fs.createWriteStream('video/video ' + nameFile + '.mp4');
+
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
+
+async function getVideoLink(videoId) {
+    //const videoId = '-179997490_456242052'; // ID видео
+    console.log("Скачиваем видео: " + videoId)
+
+    const response = await axios.get(
+        `https://api.vk.com/method/video.get?
+    videos=${videoId}&
+    access_token=${accessToken}&
+    v=5.130`);
+
+    if (response.data.response && response.data.response.items && response.data.response.items.length > 0) {
+        const video = response.data.response.items[0];
+        return video.player; // Ссылка на видео
+    } else {
+        throw new Error('Видео не найдено');
+    }
+}
 
 
 
 
 
+// Функция для создания хеша изображения
+function createHash(buffer) {
+    return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+// Функция для создания имени файла из хеша
+function createFileName(hash) {
+    return hash.slice(0, 10);
+}
 
 
 
