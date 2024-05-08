@@ -154,6 +154,8 @@ let bool_isinfoShow = false;        // Если = true, то в консоль �
 let count = 10
 let offset = 0
 
+let bool_isShowCountOfPosts = false; // Мы уже вывели общее количество постов?
+
 console.log(`Мы начинаем с ${offset} поста сверху страницы, и запрашиваем ${count} постов`)
 
 await 
@@ -170,7 +172,7 @@ v=5.130`)
         let int_insCountOfThePost = 0;
         console.log("count = " + count)
         console.log("offset = " + offset)
-        console.log("")
+        //console.log("")
 
         // Обрабатываем каждый пост
         json.response.items.forEach(item => {
@@ -179,6 +181,19 @@ v=5.130`)
 
             // Выводим всю информацию о посте
             //console.log("📚 Информация о посте: ", item);
+
+            // Выводим общее количество постов в группе:
+            if(bool_isShowCountOfPosts == false) {
+                if (offset == 0) {
+                    // Ищем id поста:
+                    let idPost = 'id' in item ? item.id : '';
+                    console.log("Общее количество постов в группе: " + idPost)
+                    console.log("") 
+                    bool_isShowCountOfPosts = true;
+                } else {
+                    bool_isShowCountOfPosts = true;
+                }
+            }
 
             // Получаем дату публикации поста
             const postDateTime = moment.unix(item.date).format('YYYY.MM.DD HH⁚mm');
