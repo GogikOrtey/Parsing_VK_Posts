@@ -21,6 +21,15 @@ console.log("Вас приветствует программа загрузки
 console.log("")
 
 
+if(accessToken == '') {
+    console.log("В программе не указан Ключ доступа к API. Его нужно указать в переменной accessToken, в ~14 строчке кода")
+    console.log("Как получить Ключ доступа к API ВКонтакте - вы можете легко узнать в интернете. Это не займёт больше 2х минут")
+    console.log('');
+    console.log('🔴 Error! Программа остановлена с ошибкой');
+    process.exit();
+}
+
+
 // ID группы ВКонтакте
 const groupId = '224924750';
 
@@ -34,6 +43,7 @@ await fetch(`https://api.vk.com/method/groups.getById?group_id=${groupId}&access
         let groupName = data.response[0].name;
         goonGroupName = sanitizeFilename(groupName);
         console.log("Название группы: " + goonGroupName);
+        console.log("");
     })
     // .catch(error => console.error('Ошибка:', error));
 
@@ -63,7 +73,7 @@ let mainPath = 'main/';
 // Создаю папку Session [Дата и время] - для устранения любых конфликтов
 // В ней создаю папку с названием группы
 
-let currDateTime = moment().format('YYYY.MM.DD HH⁚mm');
+let currDateTime = moment().format('YYYY.MM.DD HH⁚mm⁚ss');
 // currDateTime = currDateTime.replace(':', 'H')
 // currDateTime = currDateTime.replace(';', 'm')
 let nameFlMainSession = mainPath + 'Session [' + currDateTime + ']';
@@ -72,39 +82,38 @@ let nameFlMainSession = mainPath + 'Session [' + currDateTime + ']';
 if (fs.existsSync(nameFlMainSession)) {
     // Если да - то останавливаю программу
     console.log('');
-    console.log('🔴 Error!');
+    console.log('🔴 Error! Программа остановлена с ошибкой:');
     console.log('Папка с таким названием сессии уже существует!');
     console.log('Подождите 1 минуту, и запустите программу снова');
     process.exit();
 }
 
-await fs.mkdir(nameFlMainSession, { recursive: true }, (err) => {
+// Создаём папку новой сессии
+await fs.mkdirSync(nameFlMainSession, { recursive: true });
+console.log('Папка новой сессии была успешно создана');
+
+// Создаём в ней папку с именем назавния группы, из которой сохраняем контент
+await fs.mkdirSync(nameFlMainSession + '/' + goonGroupName, { recursive: true });
+
+
+
+// Создаю .txt файл, для сохранения ссылок на видео
+// (для того, что бы загрузить их позже)
+
+// Заголовок текстового файла:
+let data = 'Все ссылки на видео из постов\n\nГруппа: ' + goonGroupName + '\n\n'; 
+// Путь к этому текстовому файлу:
+let txtFile_allVideoLinks = nameFlMainSession + '/Ссылки на видео из группы ' + goonGroupName + '.txt';
+
+await fs.writeFileSync(txtFile_allVideoLinks, data, (err) => {
     if (err) throw err;
-    console.log('Папка новой сессии была успешно создана');
 });
 
-await fs.mkdir(nameFlMainSession + '/' + goonGroupName, { recursive: true }, (err) => {
+let dataAdd = "123"
+
+await fs.appendFileSync(txtFile_allVideoLinks, dataAdd, (err) => {
     if (err) throw err;
-    //console.log('Папка была успешно создана!');
 });
-
-
-// // Создаю .txt файл, для сохранения ссылок на видео
-// // (для того, что бы загрузить их позже)
-
-// let data = 'Все ссылки на видео из постов\n\nГруппа: ' + groupId;
-
-// await fs.writeFile('img/Файл с ссылками на видео.txt', data, (err) => {
-//     if (err) throw err;
-//     console.log('Файл был успешно заново создан!');
-// });
-
-// let dataAdd = "123"
-
-// fs.appendFile('img/myfile.txt', dataAdd, (err) => {
-//     if (err) throw err;
-//     console.log('Текст был успешно добавлен в файл!');
-// });
 
 
 
