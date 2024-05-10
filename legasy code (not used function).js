@@ -153,3 +153,137 @@ function createFileName(hash) {
 
 
 
+                // // Для всех изображений, в полученном наборе:
+                // for (let attachment of attachments) {
+                    
+                //     // Ссылка на файл:
+                //     const attachmentUrl = attachment.doc.url;
+                //     console.log("🕹️ attachmentUrl = " + attachmentUrl)
+
+                //     const photoUrl = attachmentUrl;
+
+                //     try {
+                //         // Запрашиваю картинки, по ссылкам, полученным из поста
+                //         // Эти запросы выполняются асинхронно
+                //         counterWaitRequest++;
+                //         let buffer = await downloadImage(photoUrl);
+
+                //         console.log(buffer)
+
+                //         //let hash = createHash(buffer);                    // Вычисляем хеш изображения
+                //         //console.log("hash = " + hash)
+
+                //         let fileName = '[' + postDateTime + ']';            // Задаю имя для изображения
+
+                //         // Если в посте было описание, то я добавляю его в название файла
+                //         if (goodPostText != '') {
+                //             fileName += ' ' + goodPostText;
+                //         }
+
+                //         if (bool_ismultiplyPhotosInThePost === true) {
+                //             // Если изображений несколько, то для каждого задаю его номер в посте
+                //             fileName += " - " + countImage;
+                //             countImage++;
+                //         }
+
+                //         do {
+                //             let tempFileName = fileName;
+                //             if (addCount > 1) {
+                //                 tempFileName += " (" + addCount + ")";
+                //             }
+                //             tempFileName += ".gif";
+
+                //             let path = floberGroupName + `/${tempFileName}`; // Путь, куда картинка будет сохранена
+
+                //             // Кидаю предупреждение, если такой файл уже есть в этой папке
+                //             if (!fs.existsSync(path)) {
+                //                 fileName = tempFileName;
+                //                 break;
+                //             }
+
+                //             if (bool_isinfoShow) console.log("⚠️ Файл с именем " + tempFileName + " уже существует в папке " + floberGroupName);
+                //             addCount++;
+                //         } while (true);
+
+                //         let path = floberGroupName + `/${fileName}`;
+
+                //         // Сохраняю это изображение в папке 
+                //         fs.writeFileSync(path, buffer);
+
+                //         console.log("🕹️ Gif с именем " + fileName + " сохранён в папке " + floberGroupName);
+
+                //         // Получаю timestamp из postDateTime
+                //         let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                //         // Устанавливаю время создания файла
+                //         fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+                //             if (err) throw err;
+                //             if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
+                //                 " установлено на " + postDateTime);
+                //         });
+
+                //         counterWaitRequest--;
+                //     } catch (err) {
+                //         console.error(err);
+                //     }
+                // }
+
+
+
+
+                // // Для всех вложений в полученном наборе:
+                // attachments.forEach(attachment => {
+                //     // Если вложение является gif или документом:
+                //     if (attachment.type === 'doc' && attachment.doc.ext === 'gif') {
+                //         // Выводим всю информацию о вложении
+                //         //console.log("📚 Информация о вложении: ", attachment);
+
+                        // // Ссылка на файл:
+                        // const attachmentUrl = attachment.doc.url;
+                        // console.log("attachmentUrl = " + attachmentUrl)
+
+                //         counterWaitRequest++;
+
+                //         // Запрашиваю вложения, по ссылкам, полученным из поста
+                //         // Эти запросы выполняются асинхронно
+                //         https.get(attachmentUrl, response => {
+
+                //             let data = [];
+
+                //             response.on('data', chunk => {
+                //                 data.push(chunk);
+                //             }).on('end', () => {
+                //                 let buffer = Buffer.concat(data);                   // Собираем кусочки вложения в одно
+
+                //                 let fileName = '[' + postDateTime + ']';            // Задаю имя для вложения
+
+                //                 // Если в посте было описание, то я добавляю его в название файла
+                //                 if (goodPostText != '') {
+                //                     fileName += ' ' + goodPostText;
+                //                 }
+
+                //                 fileName += ".gif";
+
+                //                 let path = floberGroupName + `/${fileName}`;        // Путь, куда вложение будет сохранено
+
+                //                 // Сохраняю это вложение в папке 
+                //                 fs.writeFile(path, buffer, err => {
+                //                     if (err) throw err;
+                //                     console.log("🕹️ Gif с именем " + fileName + " сохранён в папке " + floberGroupName);
+
+                //                     // Получаю timestamp из postDateTime
+                //                     let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                //                     // Устанавливаю время создания файла
+                //                     fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+                //                         if (err) throw err;
+                //                         if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
+                //                             " установлено на " + postDateTime);
+                //                     });
+
+                //                     counterWaitRequest--;
+                //                 });
+                //             });
+                //         });
+                //     }
+                // });
