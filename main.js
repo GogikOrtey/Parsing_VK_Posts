@@ -21,17 +21,17 @@ import axios from 'axios';
 const accessToken = '37382a8c37382a8c37382a8ca9342001943373837382a8c5108cd6d715313038c2969d4';
 
 // ID группы ВКонтакте
-// const groupId = '224924750';        // Мемы для программистов
-const groupId = '185062110';        // Best Photo Live!
-// const groupId = '169371425';        // Жизненные ценности
+// + // const groupId = '224924750';        // Мемы для программистов
+// + // const groupId = '185062110';        // Best Photo Live!
+// + // const groupId = '169371425';        // Жизненные ценности
 // + // const groupId = '168229061';        // Очень тупые картинки (старая группа)
 // + // const groupId = '206265163';        // Творческое вдохновение
 // + // const groupId = '169682998';        // Секрет
 // + // const groupId = '212162826';        // Пошлые картиночки
-// const groupId = '216386129';        // Милые картинки
-// const groupId = '222482163';        // Смешные картинки из интернета
-// const groupId = '184506157';        // Улётные картинки #2
-// const groupId = '186150422';        // Love is beautiful
+// + // const groupId = '216386129';        // Милые картинки
+// + // const groupId = '222482163';        // Смешные картинки из интернета
+// + // const groupId = '184506157';        // Улётные картинки #2
+// + // const groupId = '186150422';        // Love is beautiful
 
 
 // https://vk.com/public + этот номер, без пробела
