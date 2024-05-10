@@ -33,8 +33,8 @@ if(accessToken == '') {
 
 // ID группы ВКонтакте
 // const groupId = '224924750'; // Мемы для программистов
-// const groupId = '185062110';    // Best Photo Live!
-const groupId = '169371425';    // Жизненные ценности
+const groupId = '185062110';    // Best Photo Live!
+// const groupId = '169371425';    // Жизненные ценности
 
 let goonGroupName = '';
 
@@ -413,7 +413,21 @@ v=5.130`)
                 for (let photoAttachment of photos) {
                     // Получаем URL фотографии с максимальным разрешением
                     const photo = photoAttachment.photo;
-                    const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+                    //const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+
+                    let maxResolution = 0;
+                    let maxResolutionUrl = '';
+
+                    // Проходим по всем разрешениям, и выбираем то, которое больше всего
+                    for (let size of photo.sizes) {
+                        let resolution = size.width * size.height;
+                        if (resolution > maxResolution) {
+                            maxResolution = resolution;
+                            maxResolutionUrl = size.url;
+                        }
+                    }
+
+                    const photoUrl = maxResolutionUrl;
 
                     try {
                         // Запрашиваю картинки, по ссылкам, полученным из поста
