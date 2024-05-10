@@ -719,13 +719,15 @@ async function EndOfProgramm() {
      
     console.log(dOut2)
     console.log(``)
-    
-    // Сохраняю в текстовом файле сессии, на каком посте мы остановились:
-    
-    // Путь к этому текстовому файлу:
-    let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
-    
-    await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
+
+    if (!((bool_isFinalPublicWall == true && int_lastNumberOfPost != -1))) {
+        // Сохраняю в текстовом файле сессии, на каком посте мы остановились:
+
+        // Путь к этому текстовому файлу:
+        let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
+
+        await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
+    }
 
     // Сохраняю файл, что мы дошли до конца сообщества
     
