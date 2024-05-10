@@ -195,14 +195,16 @@ let int_lastNumberOfPost = -1;      // № последнего поста
     //          Count и Offset          //
     ////////////////////////////////////*/
 
-let startCount = 10
-let startOffset = 50
+let startCount = 5
+let startOffset = 20
+let allCount = 5       // Сколько мы обработаем изображений // = -1, если без ограничения
 
 const oldStartOffset = startOffset; // Значение, которое не меняется
 
 let bool_isShowCountOfPosts = false; // Мы уже вывели общее количество постов?
 
 console.log(`Мы начинаем с ${startOffset} поста сверху страницы, и запрашиваем ${startCount} постов`)
+if(allCount != -1) console.log(`Мы хотим загрузить всего ${allCount} постов`)
 
 
 
@@ -214,7 +216,7 @@ console.log(`Мы начинаем с ${startOffset} поста сверху с�
                 //                                                               //
                 //                        Главный запрос                         //
                 //                                                               //
-                //////////////////////////////////////////////////////////////// */
+                /////////////////////////////////////////////////////////////////*/
 
 async function MainRequest(count, offset) {
 
@@ -356,7 +358,7 @@ v=5.130`)
                 function CreateTextFileForDescrPost() {
                     if (postText != '') {
 
-                        let fileName = '[' + postDateTime + ']';
+                        let fileName = '[' + postDateTime + '] ' + goodPostText;
                         let path = floberGroupName + `/${fileName}.txt`;
 
                         // Сохраняю этот текст в папке
@@ -467,7 +469,7 @@ v=5.130`)
                                 break;
                             }
                 
-                            console.log("⚠️ Файл с именем " + tempFileName + " уже существует в папке " + floberGroupName);
+                            if (bool_isinfoShow) console.log("⚠️ Файл с именем " + tempFileName + " уже существует в папке " + floberGroupName);
                             addCount++;
                         } while (true);
                 
@@ -690,6 +692,16 @@ async function waitForCondition() {
             console.log("Продолжаем загружать посты")
     
             startOffset += startCount; // Каждый раз делаем шаг на то количество постов, которое изначально запросили
+
+            // Проверка на количество постов, которое мы изначально хотели загрузить
+            if(allCount != -1) {
+                console.log("—————————————————————— startOffset - oldStartOffset = " + (startOffset - oldStartOffset))
+                if((startOffset - oldStartOffset) >= allCount) {
+                    console.log("Мы загрузили достаточно постов (" + (startOffset - oldStartOffset) + "), на этом программа завершается")
+                    await EndOfProgramm();
+                    process.exit();
+                } 
+            }
     
             MainRequest(startCount, startOffset); // И запускаем запрос заново
         } else {
@@ -727,14 +739,14 @@ async function EndOfProgramm() {
         let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
 
         await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
-    }
+    } else {
+        // Сохраняю файл, что мы дошли до конца сообщества:
 
-    // Сохраняю файл, что мы дошли до конца сообщества
-    
-    // Путь к этому текстовому файлу:
-    let txtFile_stopThisProgramm_2 = nameFlMainSession + '/🔥 Мы дошли до конца группы ' + goonGroupName + '.txt';
-    
-    await fs.writeFileSync(txtFile_stopThisProgramm_2, dOut2);
+        // Путь к этому текстовому файлу:
+        let txtFile_stopThisProgramm_2 = nameFlMainSession + '/🔥 Мы дошли до конца группы ' + goonGroupName + '.txt';
+
+        await fs.writeFileSync(txtFile_stopThisProgramm_2, dOut2);
+    }
 }
 
 
