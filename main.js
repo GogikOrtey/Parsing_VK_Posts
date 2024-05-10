@@ -131,6 +131,36 @@ await fs.writeFileSync(txtFile_allVideoLinks, data);
 //     if (err) throw err;
 // });
 
+// let countPostsInThisGroup = 0;
+
+
+// await fetch(`https://api.vk.com/method/wall.get?
+// owner_id=-${groupId}&
+// count=1&
+// offset=0&
+// access_token=${accessToken}&
+// v=5.130`)
+//     .then(res => res.json())
+//     .then(json => {
+
+//         // Обрабатываем каждый пост
+//         json.response.items.forEach(async item => {
+
+//             // Выводим общее количество постов в группе:
+//             if (bool_isShowCountOfPosts == false) {
+//                 if (offset == 0) {
+//                     // Ищем id поста:
+//                     let idPost = 'id' in item ? item.id : '';
+//                     countPostsInThisGroup = idPost;
+//                     console.log("Общее количество постов в группе: " + idPost)
+//                     console.log("")
+//                     bool_isShowCountOfPosts = true;
+//                 } else {
+//                     bool_isShowCountOfPosts = true;
+//                 }
+//             }
+//         });
+//     });
 
 
 
@@ -145,6 +175,8 @@ let bool_isWeGoingToPoll = false;   // Мы дошли до опроса в об
 
 let counterWaitRequest = 0;         // Сколько запросов мы ждём в данный момент
 let lastEventTime = 0;              // Для отслеживания времени между запросами
+let timeDifference = 0;             // Разница между последним запросом
+let int_lastNumberOfPost = -1;      // № последнего поста
 
 
 
@@ -157,13 +189,16 @@ let lastEventTime = 0;              // Для отслеживания врем�
 // Получаем последние посты из группы
 // Здесь, "count=" - это количество постов, которые вернёт нам сервер max=100
 // "offset=_" - это сдвиг, относительно которого нам сервер отправит посты
+// offset сдвигается на count, после каждого запроса
 
     /*////////////////////////////////////
     //          Count и Offset          //
     ////////////////////////////////////*/
 
 let startCount = 10
-let startOffset = 40
+let startOffset = 50
+
+const oldStartOffset = startOffset; // Значение, которое не меняется
 
 let bool_isShowCountOfPosts = false; // Мы уже вывели общее количество постов?
 
@@ -192,7 +227,7 @@ async function MainRequest(count, offset) {
         lastEventTime = Date.now(); // Запоминаем время начала
     } else {
         let currentEventTime = Date.now(); // Запоминаем время окончания
-        let timeDifference = (currentEventTime - lastEventTime) / 1000; // Вычисляем разницу в секундах
+        timeDifference = (currentEventTime - lastEventTime) / 1000; // Вычисляем разницу в секундах
 
         console.log(`С последнего запроса прошло ${timeDifference.toFixed(2)} секунд`);
 
@@ -224,6 +259,7 @@ v=5.130`)
                 // Обрабатываем каждый пост асинхронно (одновременно)
                 console.log("")
                 int_insCountOfThePost++;    // № обрабатываемого поста, начиная с 1
+                int_lastNumberOfPost = int_insCountOfThePost;
 
                 // Выводим всю информацию о посте
                 //console.log("📚 Информация о посте: ", item);
@@ -611,7 +647,8 @@ v=5.130`)
 }
 
 
-let bool_isFirstStart = true; // Это первый запуск запроса?
+let bool_isFirstStart = true;       // Это первый запуск запроса?
+let bool_isFinalPublicWall = false; // Все посты сообщества закончились?
 
 waitForCondition();
 
@@ -639,8 +676,18 @@ async function waitForCondition() {
         console.log("")
         console.log("Мы загрузили все посты с " + startOffset + " по " + (startOffset + startCount));
         if(bool_isWeGoingToPoll == false) {
+            
+            // Обработка случая, когда посты в сообществе закончились
+            if ((timeDifference < 0.5) && (timeDifference > 0)) {
+                console.log("")
+                console.log("С последнего запроса прошло " + timeDifference.toFixed(2) + " секунд")
+                console.log("🎈 Слишком частые ответы, скорее всего посты в сообществе закончились")
+                bool_isFinalPublicWall = true; 
+                await EndOfProgramm();
+                process.exit();
+            }
+
             console.log("Продолжаем загружать посты")
-            // !!! Обработка конца сообщества
     
             startOffset += startCount; // Каждый раз делаем шаг на то количество постов, которое изначально запросили
     
@@ -660,7 +707,16 @@ async function waitForCondition() {
 async function EndOfProgramm() {
     console.log(``)
     console.log(`🟢🟢🟢 Программа успешно завершилась`)
-    let dOut2 = `Мы остановились на ` + (startOffset + startCount) + " посте";
+
+    let dOut2;
+
+    if(bool_isFinalPublicWall == true && int_lastNumberOfPost != -1) {
+        // № последнего поста считается немного некорректно, если мы дошли до конца постов в сообществе
+        dOut2 = `Мы остановились на ` + (int_lastNumberOfPost + oldStartOffset) + " посте. Это последний пост в сообществе 🔥🔥🔥";
+    } else {
+        dOut2 = `Мы остановились на ` + (startOffset + startCount) + " посте";
+    }
+     
     console.log(dOut2)
     console.log(``)
     
@@ -670,6 +726,13 @@ async function EndOfProgramm() {
     let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
     
     await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
+
+    // Сохраняю файл, что мы дошли до конца сообщества
+    
+    // Путь к этому текстовому файлу:
+    let txtFile_stopThisProgramm_2 = nameFlMainSession + '/🔥 Мы дошли до конца группы ' + goonGroupName + '.txt';
+    
+    await fs.writeFileSync(txtFile_stopThisProgramm_2, dOut2);
 }
 
 
