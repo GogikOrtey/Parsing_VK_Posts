@@ -137,16 +137,28 @@ await fs.writeFileSync(txtFile_allVideoLinks, data);
 let bool_isHttpGerResponse = false; // Нужен для отображения подсказки о времени http ответа
 let bool_isinfoShow = false;        // Если = true, то в консоль будут выводится дополнительные информационные сообщения
 
+let counterWaitRequest = 0;         // Сколько запросов мы ждём в данный момент
+
 // Получаем последние посты из группы
 // Здесь, "count=" - это количество постов, которые вернёт нам сервер max=100
 // "offset=_" - это сдвиг, относительно которого нам сервер отправит посты
 
-let count = 15
+    /*////////////////////////////////////
+    //          Count и Offset          //
+    ////////////////////////////////////*/
+
+let count = 10
 let offset = 30
 
 let bool_isShowCountOfPosts = false; // Мы уже вывели общее количество постов?
 
 console.log(`Мы начинаем с ${offset} поста сверху страницы, и запрашиваем ${count} постов`)
+
+                            /*/////////////////////////////////////////////////////////////////
+                            //                                                               //
+                            //                        Главный запрос                         //
+                            //                                                               //
+                            //////////////////////////////////////////////////////////////// */
 
 await 
 fetch(`https://api.vk.com/method/wall.get?
@@ -165,7 +177,8 @@ v=5.130`)
         //console.log("")
 
         // Обрабатываем каждый пост
-        json.response.items.forEach(item => {
+        json.response.items.forEach(async item => {
+            // Обрабатываем каждый пост асинхронно (одновременно)
             console.log("") 
             int_insCountOfThePost++;    // № обрабатываемого поста, начиная с 1
 
@@ -304,85 +317,163 @@ v=5.130`)
                 console.log(`${occ} Пост №${globalCountPost} Тип контента:`, attachment.type);
             });   
 
-            // Добавить обработку опросов
-
 
 
             /*////////////////////////////////////////////////////////
             //                   Сохранение фото                    //
             /////////////////////////////////////////////////////// */
 
-            // Для всех изображений, в полученном наборе:
-            photos.forEach(photoAttachment => {
-                // Выводим всю информацию о фотографии
-                //console.log("📚 Информация о фотографии: ", photoAttachment.photo);
 
+            // Функция для загрузки изображения
+            async function downloadImage(photoUrl) {
+                return new Promise((resolve, reject) => {
+                    https.get(photoUrl, response => {
+                        let data = [];
+
+                        response.on('data', chunk => {
+                            data.push(chunk);
+                        }).on('end', () => {
+                            let buffer = Buffer.concat(data); // Собираем кусочки изображения в одно
+                            resolve(buffer);
+                        }).on('error', err => {
+                            reject(err);
+                        });
+                    });
+                });
+            }
+
+            // Для всех изображений, в полученном наборе:
+            for (let photoAttachment of photos) {
                 // Получаем URL фотографии с максимальным разрешением
                 const photo = photoAttachment.photo;
                 const photoUrl = photo.sizes[photo.sizes.length - 1].url;
 
-                // Запрашиваю картинки, по ссылкам, полученным из поста
-                // Эти запросы выполняются асинхронно
-                https.get(photoUrl, response => {
-                    // В среднем - 2.2 секунды на этот запрос
-                    if(bool_isHttpGerResponse == false) {
-                        bool_isHttpGerResponse = true;
-                        // Вывожу это, что бы помнить о том, что https.get является асинхронным запросом
-                        //console.log(" ")
-                        console.log(" ")
-                        console.log("🕓")
-                    } 
+                try {
+                    // Запрашиваю картинки, по ссылкам, полученным из поста
+                    // Эти запросы выполняются асинхронно
+                    counterWaitRequest++;
+                    let buffer = await downloadImage(photoUrl);
 
-                    let data = [];
+                    //let hash = createHash(buffer);                    // Вычисляем хеш изображения
+                    //console.log("hash = " + hash)
 
-                    response.on('data', chunk => {
-                        data.push(chunk);
-                    }).on('end', () => {
-                        let buffer = Buffer.concat(data);                   // Собираем кусочки изображения в одно
+                    let fileName = '[' + postDateTime + ']';            // Задаю имя для изображения
 
-                        //let hash = createHash(buffer);                    // Вычисляем хеш изображения
-                        //console.log("hash = " + hash)
+                    // Если в посте было описание, то я добавляю его в название файла
+                    if (goodPostText != '') {
+                        fileName += ' ' + goodPostText;
+                    }
 
-                        let fileName = '[' + postDateTime + ']';            // Задаю имя для изображения
+                    if (bool_ismultiplyPhotosInThePost === true) {
+                        // Если изображений несколько, то для каждого задаю его номер в посте
+                        fileName += " - " + countImage;
+                        countImage++;
+                    }
 
-                        // Если в посте было описание, то я добавляю его в название файла
-                        if(goodPostText != '') {
-                            fileName += ' ' + goodPostText;
-                        }
+                    fileName += ".jpg";
 
-                        if (bool_ismultiplyPhotosInThePost === true) {
-                            // Если изображений несколько, то для каждого задаю его номер в посте
-                            fileName += " - " + countImage;
-                            countImage++;
-                        }
+                    let path = floberGroupName + `/${fileName}`;        // Путь, куда картинка будет сохранена
 
-                        fileName += ".jpg"; 
+                    // Кидаю предупреждение, если такой файл уже есть в этой папке
+                    if (fs.existsSync(path)) {
+                        console.log("⚠️ Файл с именем " + fileName + " уже существует в папке " + floberGroupName + ", и будет заменён");
+                    }
 
-                        let path = floberGroupName + `/${fileName}`;        // Путь, куда картинка будет сохранена
+                    // Сохраняю это изображение в папке 
+                    fs.writeFileSync(path, buffer, err => {
+                        if (err) throw err;
+                        console.log("✅ Файл с именем " + fileName + " сохранён в папке " + floberGroupName);
 
-                        // Кидаю предупреждение, если такой файл уже есть в этой папке
-                        if (fs.existsSync(path)) {
-                            console.log("⚠️ Файл с именем " + fileName + " уже существует в папке " + floberGroupName + ", и будет заменён");
-                        }
+                        // Получаю timestamp из postDateTime
+                        let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
 
-                        // Сохраняю это изображение в папке 
-                        fs.writeFile(path, buffer, err => {
+                        // Устанавливаю время создания файла
+                        fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
                             if (err) throw err;
-                            console.log("✅ Файл с именем " + fileName + " сохранён в папке " + floberGroupName);
-
-                            // Получаю timestamp из postDateTime
-                            let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
-
-                            // Устанавливаю время создания файла
-                            fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
-                                if (err) throw err;
-                                if(bool_isinfoShow) console.log("⏰ Время создания файла " + fileName + 
-                                    " установлено на " + postDateTime);
-                            });
+                            if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
+                                " установлено на " + postDateTime);
                         });
                     });
-                });
-            });
+                    counterWaitRequest--;
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+
+
+
+            // // Для всех изображений, в полученном наборе:
+            // photos.forEach(photoAttachment => {
+            //     // Выводим всю информацию о фотографии
+            //     //console.log("📚 Информация о фотографии: ", photoAttachment.photo);
+
+            //     // Получаем URL фотографии с максимальным разрешением
+            //     const photo = photoAttachment.photo;
+            //     const photoUrl = photo.sizes[photo.sizes.length - 1].url;
+
+            //     // Запрашиваю картинки, по ссылкам, полученным из поста
+            //     // Эти запросы выполняются асинхронно
+            //     https.get(photoUrl, response => {
+            //         // В среднем - 2.2 секунды на этот запрос
+            //         if(bool_isHttpGerResponse == false) {
+            //             bool_isHttpGerResponse = true;
+            //             // Вывожу это, что бы помнить о том, что https.get является асинхронным запросом
+            //             //console.log(" ")
+            //             console.log(" ")
+            //             console.log("🕓")
+            //         } 
+
+            //         let data = [];
+
+            //         response.on('data', chunk => {
+            //             data.push(chunk);
+            //         }).on('end', () => {
+            //             let buffer = Buffer.concat(data);                   // Собираем кусочки изображения в одно
+
+            //             //let hash = createHash(buffer);                    // Вычисляем хеш изображения
+            //             //console.log("hash = " + hash)
+
+            //             let fileName = '[' + postDateTime + ']';            // Задаю имя для изображения
+
+            //             // Если в посте было описание, то я добавляю его в название файла
+            //             if(goodPostText != '') {
+            //                 fileName += ' ' + goodPostText;
+            //             }
+
+            //             if (bool_ismultiplyPhotosInThePost === true) {
+            //                 // Если изображений несколько, то для каждого задаю его номер в посте
+            //                 fileName += " - " + countImage;
+            //                 countImage++;
+            //             }
+
+            //             fileName += ".jpg"; 
+
+            //             let path = floberGroupName + `/${fileName}`;        // Путь, куда картинка будет сохранена
+
+            //             // Кидаю предупреждение, если такой файл уже есть в этой папке
+            //             if (fs.existsSync(path)) {
+            //                 console.log("⚠️ Файл с именем " + fileName + " уже существует в папке " + floberGroupName + ", и будет заменён");
+            //             }
+
+            //             // Сохраняю это изображение в папке 
+            //             fs.writeFile(path, buffer, err => {
+            //                 if (err) throw err;
+            //                 console.log("✅ Файл с именем " + fileName + " сохранён в папке " + floberGroupName);
+
+            //                 // Получаю timestamp из postDateTime
+            //                 let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+            //                 // Устанавливаю время создания файла
+            //                 fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+            //                     if (err) throw err;
+            //                     if(bool_isinfoShow) console.log("⏰ Время создания файла " + fileName + 
+            //                         " установлено на " + postDateTime);
+            //                 });
+            //             });
+            //         });
+            //     });
+            // });
             
 
 
@@ -400,6 +491,8 @@ v=5.130`)
                     // Получаем URL вложения с максимальным разрешением
                     const attachmentItem = attachment[attachment.type];
                     const attachmentUrl = attachmentItem.sizes ? attachmentItem.sizes[attachmentItem.sizes.length - 1].url : attachmentItem.url;
+
+                    counterWaitRequest++;
 
                     // Запрашиваю вложения, по ссылкам, полученным из поста
                     // Эти запросы выполняются асинхронно
@@ -427,6 +520,18 @@ v=5.130`)
                             fs.writeFile(path, buffer, err => {
                                 if (err) throw err;
                                 console.log("🕹️ Gif с именем " + fileName + " сохранён в папке " + floberGroupName);
+
+                                // Получаю timestamp из postDateTime
+                                let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                                // Устанавливаю время создания файла
+                                fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+                                    if (err) throw err;
+                                    if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
+                                        " установлено на " + postDateTime);
+                                });
+
+                                counterWaitRequest--;
                             });
                         });
                     });
@@ -473,7 +578,6 @@ v=5.130`)
 
             /*//////////////////////////////////////////////////////////
             //                   Обработка опросов                    //
-            //                 И завершение программы                 //
             ///////////////////////////////////////////////////////// */
 
             // Проверяем, есть ли в посте опрос
@@ -484,29 +588,110 @@ v=5.130`)
                 // Если опрос есть, выводим его заголовок и завершаем программу
                 console.log("📊 Опрос: ", polls[0].poll.question);
                 console.log("")
-                let dOut3 = "🟣🟣🟣 Программа сохранения постов была успешно остановлена на " + (offset + count) + " посте"
+                let dOut3 = "🟣🟣🟣 Программа сохранения дошла до " + (offset + count) + " поста, в котором есть опрос"
                 console.log(dOut3);
-                let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
-                fs.writeFileSync(txtFile_stopThisProgramm, dOut3);
-                process.exit();
+                // let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
+                // fs.writeFileSync(txtFile_stopThisProgramm, dOut3);
+                //process.exit();
+
+                // Также сохраняю текстовый документ, с опросом
+
+                let fileName = '[' + postDateTime + ']' + " Опрос: " + sanitizeFilename2(polls[0].poll.question);
+                let path = floberGroupName + `/${fileName}.txt`;
+
+                // Сохраняю этот текст в папке
+                fs.writeFile(path, polls[0].poll.question, err => {
+                    if (err) throw err;
+                    console.log("📄 Текстовый файл с именем " + fileName + " сохранён в папке " + floberGroupName);
+
+                    // Получаю timestamp из postDateTime
+                    let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                    // Устанавливаю время создания файла
+                    fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
+                        if (err) throw err;
+                        if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
+                            " установлено на " + postDateTime);
+                    });
+                });
             }
         });
     });
 
+console.log("")
+console.log("🕑")
+waitForCondition();
+
+// Ждёт, пока не завершатся все https запросы
+async function waitForCondition() {
+    let conditionMet = false;
+
+    while (counterWaitRequest > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Ждем 0.5 секунды
+
+        if (counterWaitRequest > 0) {
+            // console.log("counterWaitRequest > 0, ждем еще...");
+            // console.log("counterWaitRequest = " + counterWaitRequest);
+            console.log("Ещё не все файлы из набора загружены, ждём...")
+            //console.log("")
+        }
+    }
+
+    console.log("")
+    console.log("Мы загрузили все посты с " + offset + " по " + (offset + count));
+    EndOfProgramm();
+}
 
 
-console.log(``)
-console.log(`🟢🟢🟢 Программа успешно завершилась`)
-let dOut2 = `Мы остановились на ` + (offset + count) + " посте";
-console.log(dOut2)
-console.log(``)
+    /*////////////////////////////////////
+    //       Завершение программы       //
+    ////////////////////////////////////*/
 
-// Сохраняю в текстовом файле сессии, на каком посте мы остановились:
 
-// Путь к этому текстовому файлу:
-let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
+async function EndOfProgramm() {
+    console.log(``)
+    console.log(`🟢🟢🟢 Программа успешно завершилась`)
+    let dOut2 = `Мы остановились на ` + (offset + count) + " посте";
+    console.log(dOut2)
+    console.log(``)
+    
+    // Сохраняю в текстовом файле сессии, на каком посте мы остановились:
+    
+    // Путь к этому текстовому файлу:
+    let txtFile_stopThisProgramm = nameFlMainSession + '/На каком посте остановились из группы ' + goonGroupName + '.txt';
+    
+    await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
+}
 
-await fs.writeFileSync(txtFile_stopThisProgramm, dOut2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // !!! Здесь также вывести в файл, скачали ли мы все посты из группы, или нет
