@@ -163,7 +163,7 @@ let lastEventTime = 0;              // Для отслеживания врем�
     ////////////////////////////////////*/
 
 let startCount = 10
-let startOffset = 20
+let startOffset = 40
 
 let bool_isShowCountOfPosts = false; // Мы уже вывели общее количество постов?
 
@@ -386,6 +386,8 @@ v=5.130`)
                     });
                 }
 
+                let addCount = 1;
+
                 // Для всех изображений, в полученном наборе:
                 for (let photoAttachment of photos) {
                     // Получаем URL фотографии с максимальным разрешением
@@ -414,18 +416,30 @@ v=5.130`)
                             countImage++;
                         }
 
-                        fileName += ".jpg";
-
-                        let path = floberGroupName + `/${fileName}`;        // Путь, куда картинка будет сохранена
-
-                        // Кидаю предупреждение, если такой файл уже есть в этой папке
-                        if (fs.existsSync(path)) {
-                            console.log("⚠️ Файл с именем " + fileName + " уже существует в папке " + floberGroupName + ", и будет заменён");
-                        }
-
+                        do {
+                            let tempFileName = fileName;
+                            if (addCount > 1) {
+                                tempFileName += " (" + addCount + ")";
+                            }
+                            tempFileName += ".jpg";
+                
+                            let path = floberGroupName + `/${tempFileName}`; // Путь, куда картинка будет сохранена
+                
+                            // Кидаю предупреждение, если такой файл уже есть в этой папке
+                            if (!fs.existsSync(path)) {
+                                fileName = tempFileName;
+                                break;
+                            }
+                
+                            console.log("⚠️ Файл с именем " + tempFileName + " уже существует в папке " + floberGroupName);
+                            addCount++;
+                        } while (true);
+                
+                        let path = floberGroupName + `/${fileName}`;
+                
                         // Сохраняю это изображение в папке 
                         fs.writeFileSync(path, buffer);
-
+                
                         console.log("✅ Файл с именем " + fileName + " сохранён в папке " + floberGroupName);
 
                         // Получаю timestamp из postDateTime
@@ -568,24 +582,24 @@ v=5.130`)
 
                     // Также сохраняю текстовый документ, с опросом
 
-                    let fileName = '[' + postDateTime + ']' + " Опрос: " + sanitizeFilename2(polls[0].poll.question);
-                    let path = floberGroupName + `/${fileName}.txt`;
+                    let poolfileName = '[' + postDateTime + ']' + " Опрос: " + sanitizeFilename2(polls[0].poll.question);
+                    let poolPath = floberGroupName + `/${poolfileName}.txt`;
+
+                    console.log("poolfileName = " + poolfileName + ", floberGroupName = " + floberGroupName)
 
                     // Сохраняю этот текст в папке
-                    fs.writeFile(path, polls[0].poll.question, err => {
+                    fs.writeFileSync(poolPath, polls[0].poll.question);
+                    console.log("📄 Текстовый файл с именем " + poolfileName + " сохранён в папке " + floberGroupName);
+
+                    // Получаю timestamp из postDateTime
+                    let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
+
+                    // Устанавливаю время создания файла
+                    fs.utimes(poolPath, timestamp / 1000, timestamp / 1000, (err) => {
                         if (err) throw err;
-                        console.log("📄 Текстовый файл с именем " + fileName + " сохранён в папке " + floberGroupName);
-
-                        // Получаю timestamp из postDateTime
-                        let timestamp = moment(postDateTime, 'YYYY.MM.DD HH⁚mm').valueOf();
-
-                        // Устанавливаю время создания файла
-                        fs.utimes(path, timestamp / 1000, timestamp / 1000, (err) => {
-                            if (err) throw err;
-                            if (bool_isinfoShow) console.log("⏰ Время создания файла " + fileName +
-                                " установлено на " + postDateTime);
-                                counterWaitRequest--;
-                        });
+                        if (bool_isinfoShow) console.log("⏰ Время создания файла " + poolfileName +
+                            " установлено на " + postDateTime);
+                        counterWaitRequest--;
                     });
                 }
             });
