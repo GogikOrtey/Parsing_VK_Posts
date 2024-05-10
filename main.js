@@ -582,7 +582,7 @@ v=5.130`)
 
                     // Также сохраняю текстовый документ, с опросом
 
-                    let poolfileName = '[' + postDateTime + ']' + " Опрос: " + sanitizeFilename2(polls[0].poll.question);
+                    let poolfileName = '[' + postDateTime + ']' + " Опрос⁚ " + sanitizeFilename2(polls[0].poll.question);
                     let poolPath = floberGroupName + `/${poolfileName}.txt`;
 
                     console.log("poolfileName = " + poolfileName + ", floberGroupName = " + floberGroupName)
