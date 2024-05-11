@@ -282,7 +282,7 @@ async function downloadVideoFromOpenedWebSite(page, inputURLVideo) {
   console.log(localMainCounter + ': Инициируем нажатие на кнопку с id="DownloadMP4HD"');
   // Инициируем нажатие на кнопку с id="DownloadMP4HD"
   page.click('#DownloadMP4HD');
-
+ 
   await delay(500);
   localMainCounter = 6; console.log(localMainCounter + ': Мы успешно начали загрузку видео');
 }
