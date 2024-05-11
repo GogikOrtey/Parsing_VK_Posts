@@ -116,7 +116,9 @@ async function MainProcess() {
     for (let j = 1; j < item.length; j++) {
       // console.log(`Ссылка ${j}: ${item[j]}`);
 
-      await DownloadVideoFromURL(item[j], allDescr, description)
+      // Если видео с этой датой несколько, то добавляю номера к ним, что бы они все сохранились
+      if(item.length > 2) await DownloadVideoFromURL(item[j], allDescr + " (" + (j-1) + ")", description)
+      else await DownloadVideoFromURL(item[j], allDescr, description)
     }
 
     console.log(`Обработка ${i + 1} элемента завершена`);
