@@ -48,6 +48,15 @@ import puppeteer from 'puppeteer-core';
 
 
 
+
+
+
+
+
+
+
+
+
 // Функция для ожидания
 const delay = ms => new Promise(res => setTimeout(res, ms));
 // Использование: 
@@ -80,29 +89,22 @@ async function DownloadVideoFromURL(inputURLVideo) {
 
     const page = await browser.newPage();
 
-    // const pagePromise = 
+    // Открываю нужную веб-страницу
     page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
 
-    localMainCounter = 2; console.log(localMainCounter + ': Ждём 5 секунд, пока страница загрузится');
+    localMainCounter = 2; console.log(localMainCounter + ': Ждём 7 секунд, пока страница загрузится');
     
-    await delay(5000);
+    await delay(7000);
 
-    localMainCounter = 3; console.log(localMainCounter + ': Идём дальше');
+    localMainCounter = 3; 
+    console.log(localMainCounter + ': Передаём управление в функцию загрузки видео на уже открытой странице');
 
-    await delay(5000);
-    localMainCounter = 4;
-    console.log(localMainCounter + ': Вставляем текстовую строку в поле ввода с id="url"');
-  
-    page.evaluate((url) => {
-      document.querySelector('#url').value = url;
-    }, inputURLVideo);
-  
-    await delay(500);
-    localMainCounter = 5;
-    console.log(localMainCounter + ': Инициируем нажатие на кнопку с id="DownloadMP4HD"');
-    // Инициируем нажатие на кнопку с id="DownloadMP4HD"
-    page.click('#DownloadMP4HD');
+    // Передаём управление в функцию загрузки видео на уже открытой странице
+    await downloadVideoFromOpenedWebSite(page, inputURLVideo);
 
+    localMainCounter = 7; console.log(localMainCounter + ': Закрываем браузер');
+
+    // await browser.close();
   } catch (error) {
     console.error('Произошла Ошибка:', error);
   }
@@ -111,8 +113,25 @@ async function DownloadVideoFromURL(inputURLVideo) {
 
 
 // Скачивает видео, уже с открытой страницы
-async function downloadVideoFromOpenedWebSite() {
+async function downloadVideoFromOpenedWebSite(page, inputURLVideo) {
+  console.log('Скачиваем видео с адресом: ' + inputURLVideo);
+  await delay(500);
 
+  let localMainCounter = 4;
+  console.log(localMainCounter + ': Вставляем текстовую строку в поле ввода с id="url"');
+
+  page.evaluate((url) => {
+    document.querySelector('#url').value = url;
+  }, inputURLVideo);
+
+  await delay(500);
+  localMainCounter = 5;
+  console.log(localMainCounter + ': Инициируем нажатие на кнопку с id="DownloadMP4HD"');
+  // Инициируем нажатие на кнопку с id="DownloadMP4HD"
+  page.click('#DownloadMP4HD');
+
+  await delay(500);
+  localMainCounter = 6; console.log(localMainCounter + ': Мы успешно начали загрузку видео');
 }
 
 
