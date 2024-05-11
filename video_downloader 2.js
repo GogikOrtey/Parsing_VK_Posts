@@ -14,6 +14,10 @@ console.log("Вас приветствует программа загрузки
 console.log("")
 
 
+// Функция для ожидания
+const delay = ms => new Promise(res => setTimeout(res, ms));
+// Использование: 
+// await delay(500);
 
 
 
@@ -60,12 +64,13 @@ async function processFile() {
   return data;
 }
 
-console.log(data);
+// console.log(data);
 
 
 // Удаляем первый внутренний массив
 data.shift();
 
+// Цикл, который выводит информацию:
 for (let i = 0; i < data.length; i++) {
   let item = data[i];
   let description = item[0].substring(1, item[0].indexOf(']'));
@@ -78,6 +83,32 @@ for (let i = 0; i < data.length; i++) {
 
   for (let j = 1; j < item.length; j++) {
     console.log(`Ссылка ${j}: ${item[j]}`);
+  }
+
+  console.log(`Обработка ${i + 1} элемента завершена`);
+  console.log()
+}
+
+
+// Цикл, который обрабатывает все видео
+for (let i = 0; i < data.length; i++) {
+
+  let item = data[i];
+
+  let description = item[0].substring(1, item[0].indexOf(']'));
+  console.log(`Дата и время: ${description}`);
+
+  let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
+  if (rest.length > 0) {
+    console.log(`Описание: ${rest}`);
+  }
+
+  let allDescr = item[0];
+
+  for (let j = 1; j < item.length; j++) {
+    // console.log(`Ссылка ${j}: ${item[j]}`);
+    
+    await DownloadVideoFromURL(item[j], allDescr)
   }
 
   console.log(`Обработка ${i + 1} элемента завершена`);
@@ -109,10 +140,6 @@ for (let i = 0; i < data.length; i++) {
 
 
 
-// Функция для ожидания
-const delay = ms => new Promise(res => setTimeout(res, ms));
-// Использование: 
-// await delay(500);
 
 
 
@@ -122,7 +149,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 
 
-async function DownloadVideoFromURL(inputURLVideo) {
+async function DownloadVideoFromURL(inputURLVideo, allDescr) {
   let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
 
   try {
