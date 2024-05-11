@@ -27,7 +27,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 // Путь к папке "Загрузки"
 const downloadsFolder = 'D:\\Загрузки';
 
-
+let page
 
 let data = [];
 
@@ -96,6 +96,7 @@ async function MainProcess() {
     console.log()
   }
 
+  await StartBrowser();
 
   // Цикл, который обрабатывает все видео
   for (let i = 0; i < data.length; i++) {
@@ -154,6 +155,58 @@ function sanitizeFilename2(filename) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+// Функция, которая открывает браузер, и дальше передаёт управление в другие функции
+async function StartBrowser() {
+  let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
+
+  try {
+    // console.log("inputURLVideo = " + inputURLVideo);
+
+    localMainCounter = 0; console.log(localMainCounter + ': Открываем браузер');
+
+    // Запускаем браузер:
+    const browser = await puppeteer.launch({
+      // Путь к исполняемому файлу браузера Edge
+      executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+      headless: false // Открывает браузер в режиме с графическим интерфейсом
+    });
+
+    localMainCounter = 1; console.log(localMainCounter + ': Браузер успешно открыт');
+
+    page = await browser.newPage();
+
+    // Открываю нужную веб-страницу
+    const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+
+    await Promise.race([pagePromise, timeoutPromise]);
+
+    localMainCounter = 2; console.log(localMainCounter + ': Ждём 7 секунд, пока страница загрузится');
+    
+    await delay(7000);
+
+    localMainCounter = 3; 
+    console.log(localMainCounter + ': Передаём управление в функцию загрузки видео на уже открытой странице');
+
+    // localMainCounter = 10; console.log(localMainCounter + ': Закрываем браузер');
+
+    // await browser.close();
+  } catch (error) {
+    console.error('Произошла Ошибка:', error);
+  }
+}
+
+
  
 
 
@@ -174,41 +227,12 @@ function sanitizeFilename2(filename) {
 
 
 
-// DownloadVideoFromURL('https://vk.com/video-72495085_456242529')
 
 // Функция, которая открывает браузер, и дальше передаёт управление в другие функции
 async function DownloadVideoFromURL(inputURLVideo, allDescr, dataTimeFile) {
-  let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
+  let localMainCounter = 3; // Счётчик, который показывает, какое у нас сейчас состояние в коде
 
   try {
-    // console.log("inputURLVideo = " + inputURLVideo);
-
-    localMainCounter = 0; console.log(localMainCounter + ': Открываем браузер');
-
-    // Запускаем браузер:
-    const browser = await puppeteer.launch({
-      // Путь к исполняемому файлу браузера Edge
-      executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
-      headless: false // Открывает браузер в режиме с графическим интерфейсом
-    });
-
-    localMainCounter = 1; console.log(localMainCounter + ': Браузер успешно открыт');
-
-    const page = await browser.newPage();
-
-    // Открываю нужную веб-страницу
-    const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
-
-    await Promise.race([pagePromise, timeoutPromise]);
-
-    localMainCounter = 2; console.log(localMainCounter + ': Ждём 7 секунд, пока страница загрузится');
-    
-    await delay(7000);
-
-    localMainCounter = 3; 
-    console.log(localMainCounter + ': Передаём управление в функцию загрузки видео на уже открытой странице');
-
     // Передаём управление в функцию загрузки видео на уже открытой странице
     await downloadVideoFromOpenedWebSite(page, inputURLVideo);
 
@@ -225,10 +249,6 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr, dataTimeFile) {
     localMainCounter = 9; console.log(localMainCounter + ': Файл перемещён и переименован');
 
     console.log("——————————————————")
-
-    localMainCounter = 10; console.log(localMainCounter + ': Закрываем браузер');
-
-    // await browser.close();
   } catch (error) {
     console.error('Произошла Ошибка:', error);
   }
