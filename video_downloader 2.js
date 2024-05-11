@@ -155,8 +155,6 @@ async function MainProcess() {
 
 // DownloadVideoFromURL('https://vk.com/video-72495085_456242529')
 
-
-
 // Функция, которая открывает браузер, и дальше передаёт управление в другие функции
 async function DownloadVideoFromURL(inputURLVideo, allDescr) {
   let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
@@ -178,31 +176,10 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr) {
     const page = await browser.newPage();
 
     // Открываю нужную веб-страницу
-    // page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' }); 
-
-    // const result = await Promise.race([pagePromise, timeoutPromise]);
-    
-    // if (result === pagePromise) {
-    //   console.log('Страница загружена');
-    //   // Ваш код здесь...
-    // } else {
-    //   console.log('Время ожидания истекло');
-    //   // Обработайте ошибку загрузки страницы
-    // }
-
     const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // const result = 
     await Promise.race([pagePromise, timeoutPromise]);
-
-    // if (result === pagePromise) {
-    //   console.log('Страница загружена');
-    //   // Ваш код здесь...
-    // } else {
-    //   console.log('Время ожидания истекло');
-    //   // Обработайте ошибку загрузки страницы
-    // }
 
     localMainCounter = 2; console.log(localMainCounter + ': Ждём 7 секунд, пока страница загрузится');
     
@@ -222,9 +199,13 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr) {
 
     localMainCounter = 8; console.log(localMainCounter + ': Файл загружен');
 
+    await MooveVideoFileWithoutFloberDownload(filePatch, allDescr)
+
+    localMainCounter = 9; console.log(localMainCounter + ': Файл перемещён и переименован');
+
     console.log("——————————————————")
 
-    localMainCounter = 9; console.log(localMainCounter + ': Закрываем браузер');
+    localMainCounter = 10; console.log(localMainCounter + ': Закрываем браузер');
 
     // await browser.close();
   } catch (error) {
@@ -258,18 +239,7 @@ async function downloadVideoFromOpenedWebSite(page, inputURLVideo) {
 
 
 
-
-
-
-
-
-
 // waitForDownloadVideo();
-
-
-
-
-
 
 // Ждёт, пока в папке Загрузки не появится скачанный файл
 async function waitForDownloadVideo() {
@@ -301,7 +271,28 @@ async function waitForDownloadVideo() {
 
 
 
+// MooveVideoFileWithoutFloberDownload('D:\\Загрузки\\Реакция кошек__.mp4', 'newFile222222')
 
+// Перемещает файл с именем patchVideoFile, в папку video/output, и переименовывает
+async function MooveVideoFileWithoutFloberDownload(patchVideoFile, newFileName) {
+
+  // Все \ заменяю на \\
+  patchVideoFile = patchVideoFile.replace(/\\/g, '\\');
+  // console.log("patchVideoFile = " + patchVideoFile)
+
+  // Исходный и целевой пути
+  let sourcePath = patchVideoFile;
+  let targetPath = path.join('video/output', newFileName + ".mp4");
+
+  // Перемещение файла
+  fs.rename(sourcePath, targetPath, function (err) {
+    if (err) {
+      console.error('Ошибка:', err);
+    } else {
+      console.log('Файл успешно перемещен и переименован!');
+    }
+  });
+}
 
 
 
