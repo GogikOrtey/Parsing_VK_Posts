@@ -32,7 +32,11 @@ let data = [];
 
 data = await processFile(data);
 
-async function processFile() {
+await MainProcess();
+
+
+// Функция, которая загружает в массив data все ссылки из входного текстового файла
+function processFile() {
   let fileStream = fs.createReadStream('video/input.txt');
   let rl = readline.createInterface({ input: fileStream });
 
@@ -67,56 +71,59 @@ async function processFile() {
   return data;
 }
 
-// console.log(data);
 
+// Основная функция, которая загружает все видео по ссылкам, из массива data
+async function MainProcess() {
+  // Удаляем первый внутренний массив
+  data.shift();
 
-// Удаляем первый внутренний массив
-data.shift();
+  // Цикл, который просто выводит информацию:
+  for (let i = 0; i < data.length; i++) {
+    let item = data[i];
+    let description = item[0].substring(1, item[0].indexOf(']'));
+    console.log(`Дата и время: ${description}`);
 
-// Цикл, который выводит информацию:
-for (let i = 0; i < data.length; i++) {
-  let item = data[i];
-  let description = item[0].substring(1, item[0].indexOf(']'));
-  console.log(`Дата и время: ${description}`);
+    let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
+    if (rest.length > 0) {
+      console.log(`Описание: ${rest}`);
+    }
 
-  let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
-  if (rest.length > 0) {
-    console.log(`Описание: ${rest}`);
+    for (let j = 1; j < item.length; j++) {
+      console.log(`Ссылка ${j}: ${item[j]}`);
+    }
+
+    console.log(`Обработка ${i + 1} элемента завершена`);
+    console.log()
   }
 
-  for (let j = 1; j < item.length; j++) {
-    console.log(`Ссылка ${j}: ${item[j]}`);
-  }
 
-  console.log(`Обработка ${i + 1} элемента завершена`);
-  console.log()
+  // Цикл, который обрабатывает все видео
+  for (let i = 0; i < data.length; i++) {
+
+    let item = data[i];
+
+    let description = item[0].substring(1, item[0].indexOf(']'));
+    console.log(`Дата и время: ${description}`);
+
+    let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
+    if (rest.length > 0) {
+      console.log(`Описание: ${rest}`);
+    }
+
+    let allDescr = item[0];
+
+    for (let j = 1; j < item.length; j++) {
+      // console.log(`Ссылка ${j}: ${item[j]}`);
+
+      await DownloadVideoFromURL(item[j], allDescr)
+    }
+
+    console.log(`Обработка ${i + 1} элемента завершена`);
+    console.log()
+  }
 }
 
 
-// Цикл, который обрабатывает все видео
-for (let i = 0; i < data.length; i++) {
-
-  let item = data[i];
-
-  let description = item[0].substring(1, item[0].indexOf(']'));
-  console.log(`Дата и время: ${description}`);
-
-  let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
-  if (rest.length > 0) {
-    console.log(`Описание: ${rest}`);
-  }
-
-  let allDescr = item[0];
-
-  for (let j = 1; j < item.length; j++) {
-    // console.log(`Ссылка ${j}: ${item[j]}`);
-    
-    await DownloadVideoFromURL(item[j], allDescr)
-  }
-
-  console.log(`Обработка ${i + 1} элемента завершена`);
-  console.log()
-}
 
 
 
@@ -151,7 +158,7 @@ for (let i = 0; i < data.length; i++) {
 
 
 
-
+// Функция, которая открывает браузер, и дальше передаёт управление в другие функции
 async function DownloadVideoFromURL(inputURLVideo, allDescr) {
   let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
 
