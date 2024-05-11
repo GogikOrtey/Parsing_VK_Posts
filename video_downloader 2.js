@@ -36,10 +36,9 @@ await MainProcess();
 
 
 // Функция, которая загружает в массив data все ссылки из входного текстового файла
-function processFile() {
+async function processFile(data) {
   let fileStream = fs.createReadStream('video/input.txt');
   let rl = readline.createInterface({ input: fileStream });
-
 
   let temp = [];
 
@@ -179,7 +178,31 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr) {
     const page = await browser.newPage();
 
     // Открываю нужную веб-страницу
-    page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
+    // page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' }); 
+
+    // const result = await Promise.race([pagePromise, timeoutPromise]);
+    
+    // if (result === pagePromise) {
+    //   console.log('Страница загружена');
+    //   // Ваш код здесь...
+    // } else {
+    //   console.log('Время ожидания истекло');
+    //   // Обработайте ошибку загрузки страницы
+    // }
+
+    const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // const result = 
+    await Promise.race([pagePromise, timeoutPromise]);
+
+    // if (result === pagePromise) {
+    //   console.log('Страница загружена');
+    //   // Ваш код здесь...
+    // } else {
+    //   console.log('Время ожидания истекло');
+    //   // Обработайте ошибку загрузки страницы
+    // }
 
     localMainCounter = 2; console.log(localMainCounter + ': Ждём 7 секунд, пока страница загрузится');
     
