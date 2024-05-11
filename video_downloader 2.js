@@ -1,5 +1,17 @@
 // const puppeteer = require('puppeteer');
 import puppeteer from 'puppeteer-core';
+import fs from 'fs';
+import readline from 'readline';
+
+
+
+console.log(" ")
+console.log("———————————————————————————————————————————————————————————")
+console.log("———————————————————————————————————————————————————————————")
+console.log("v0.2")
+console.log("")
+console.log("Вас приветствует программа загрузки видео по ссылкам!")
+console.log("")
 
 
 
@@ -9,37 +21,77 @@ import puppeteer from 'puppeteer-core';
 
 
 
+let data = [];
+
+data = await processFile(data);
+
+async function processFile() {
+  let fileStream = fs.createReadStream('video/input.txt');
+  let rl = readline.createInterface({ input: fileStream });
+
+
+  let temp = [];
+
+  for await (let line of rl) {
+    if (line.startsWith('[')) {
+      if (temp.length > 0) {
+        data.push(temp);
+        temp = [];
+      }
+      temp.push(line);
+    } else if (line.startsWith('https://')) {
+      temp.push(line);
+    } else if (line.trim() !== '') {
+      temp.push(line);
+    }
+  }
+
+  if (temp.length > 0) {
+    data.push(temp);
+  }
+
+  if (data.length === 0) {
+    console.log('🟠 Файлик пуст, и в нём нет ссылок');
+  } else {
+    console.log('🟢 Файлик успешно обработан и загружен');
+    // console.log(data);
+  }
+
+  return data;
+}
+
+console.log(data);
+
+
+// Удаляем первый внутренний массив
+data.shift();
+
+for (let i = 0; i < data.length; i++) {
+  let item = data[i];
+  let description = item[0].substring(1, item[0].indexOf(']'));
+  console.log(`Дата и время: ${description}`);
+
+  let rest = item[0].substring(item[0].indexOf(']') + 1).trim();
+  if (rest.length > 0) {
+    console.log(`Описание: ${rest}`);
+  }
+
+  for (let j = 1; j < item.length; j++) {
+    console.log(`Ссылка ${j}: ${item[j]}`);
+  }
+
+  console.log(`Обработка ${i + 1} элемента завершена`);
+  console.log()
+}
 
 
 
 
 
-// !!! В Gemini был код, как захватить скачанный файл. Посмотреть
 
 
 
-// Загрузка работает даже в фоновом режиме, без открытия окна браузера
-// Нужно продумать, как лучше организовать работу с вкладками
-// Наверное, через 1 секунду после последней строчки закрыть вкладку, и затем открыть новую
 
-
-// Возможно код, для переименования загруженного файла:
-
-/*
-    page.on('download', async (download) => {
-  console.log('Загрузка началась:', download.url());
-
-  // Дождитесь завершения загрузки
-  await download.on('end', () => {
-    const filename = download.filename(); // Получить имя файла
-    const newFilename = 'name file 1.mp4'; // Задать новое имя
-
-    // Переименовать файл
-    await fs.rename(filename, newFilename);
-    console.log('Файл переименован:', newFilename);
-  });
-});
-*/
 
 
 
@@ -65,7 +117,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 
 
-DownloadVideoFromURL('https://vk.com/video-72495085_456242529')
+// DownloadVideoFromURL('https://vk.com/video-72495085_456242529')
 
 
 
@@ -133,6 +185,16 @@ async function downloadVideoFromOpenedWebSite(page, inputURLVideo) {
   await delay(500);
   localMainCounter = 6; console.log(localMainCounter + ': Мы успешно начали загрузку видео');
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
