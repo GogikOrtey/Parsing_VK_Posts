@@ -1,6 +1,8 @@
 // const puppeteer = require('puppeteer');
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
+import path from 'path';
+import fsp from 'fs/promises';
 import readline from 'readline';
 
 
@@ -21,7 +23,8 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 
 
-
+// Путь к папке "Загрузки"
+const downloadsFolder = 'D:\\Загрузки';
 
 
 
@@ -181,7 +184,17 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr) {
     // Передаём управление в функцию загрузки видео на уже открытой странице
     await downloadVideoFromOpenedWebSite(page, inputURLVideo);
 
-    localMainCounter = 7; console.log(localMainCounter + ': Закрываем браузер');
+    localMainCounter = 7; 
+    console.log(localMainCounter + ': Ждём, пока файл загрузится');
+    console.log()
+
+    let filePatch = await waitForDownloadVideo();
+
+    localMainCounter = 8; console.log(localMainCounter + ': Файл загружен');
+
+    console.log("——————————————————")
+
+    localMainCounter = 9; console.log(localMainCounter + ': Закрываем браузер');
 
     // await browser.close();
   } catch (error) {
@@ -212,6 +225,50 @@ async function downloadVideoFromOpenedWebSite(page, inputURLVideo) {
   await delay(500);
   localMainCounter = 6; console.log(localMainCounter + ': Мы успешно начали загрузку видео');
 }
+
+
+
+
+
+
+
+
+
+// waitForDownloadVideo();
+
+
+
+
+
+
+// Ждёт, пока в папке Загрузки не появится скачанный файл
+async function waitForDownloadVideo() {
+  let finalPatch = ""
+
+  while (finalPatch == "") {
+    await delay(1000); // Ждём 1 секунду
+
+    const files = await fsp.readdir(downloadsFolder);
+    const mp4Files = files.filter(file => path.extname(file) === '.mp4');
+
+    if (mp4Files.length === 1) {
+      let finalPath = path.join(downloadsFolder, mp4Files[0])
+
+      console.log();      
+      console.log('Файл загрузился:');      
+      console.log(finalPath);
+
+      return finalPath;
+
+    } else if (mp4Files.length > 1) {
+      console.log('Найдено несколько файлов .mp4, удалите все лишние файлы.');
+
+    } else {
+      console.log("Файл ещё не загрузился, ждём...");
+    }
+  }
+}
+
 
 
 

@@ -405,3 +405,62 @@ function createFileName(hash) {
   });
 });
 */
+
+
+
+
+
+// // Ждёт, пока в папке Загрузки не появится скачанный файл
+// async function waitForDownloadVideo() {
+//   let finalPatch = ""
+//   while (finalPatch == "") {
+//     await delay(1000); // Ждём 1 секунду
+
+//     fs.readdir(downloadsFolder, async (err, files) => {
+//       if (err) {
+//         console.error(`Ошибка при чтении директории: ${err}`);
+//       } else {
+
+//         const mp4Files = files.filter(file => path.extname(file) === '.mp4');
+
+//         if (mp4Files.length === 1) {
+//           console.log('Найден один файл .mp4:');
+//           finalPatch = path.join(downloadsFolder, mp4Files[0])
+//           console.log(finalPatch);
+
+//           return (finalPatch);
+
+//         } else if (mp4Files.length > 1) {
+//           console.log('Найдено несколько файлов .mp4. Удалите все лишние файлы.');
+
+//         } else {
+//           //console.log('Файлы .mp4 не найдены');
+//           console.log("Файл ещё не загрузился, ждём...")
+//         }
+//       }
+//     });
+//   }
+// }
+
+
+
+
+
+
+
+// fs.readdir(downloadsFolder, (err, files) => {
+//   if (err) {
+//     console.error(`Ошибка при чтении директории: ${err}`);
+//   } else {
+//     const mp4Files = files.filter(file => path.extname(file) === '.mp4');
+//     if (mp4Files.length === 1) {
+//       console.log('Найден один файл .mp4:');
+//       console.log(path.join(downloadsFolder, mp4Files[0]));
+//     } else if (mp4Files.length > 1) {
+//       console.log('Найдено несколько файлов .mp4. Пожалуйста, уточните, какой файл вам нужен.');
+//     } else {
+//       console.log('Файлы .mp4 не найдены');
+//     }
+//   }
+// });
+
