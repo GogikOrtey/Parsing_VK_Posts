@@ -11,7 +11,7 @@ import moment from 'moment';
 console.log(" ")
 console.log("———————————————————————————————————————————————————————————")
 console.log("———————————————————————————————————————————————————————————")
-console.log("v0.2")
+console.log("v1.0")
 console.log("")
 console.log("Вас приветствует программа загрузки видео по ссылкам!")
 console.log("")
@@ -119,6 +119,9 @@ async function MainProcess() {
       // Если видео с этой датой несколько, то добавляю номера к ним, что бы они все сохранились
       if(item.length > 2) await DownloadVideoFromURL(item[j], allDescr + " (" + (j-1) + ")", description)
       else await DownloadVideoFromURL(item[j], allDescr, description)
+
+      console.log("Ждём...")
+      await delay(14000); // Ждём 20 секунд, что бы нам не было штрафа за слишком частые запросы
     }
 
     console.log(`Обработка ${i + 1} элемента завершена`);
@@ -244,6 +247,10 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr, dataTimeFile) {
 
     let filePatch = await waitForDownloadVideo();
 
+    if(filePatch == "000") {
+      return;
+    }
+
     localMainCounter = 8; console.log(localMainCounter + ': Файл загружен');
 
     await MooveVideoFileWithoutFloberDownload(filePatch, sanitizeFilename2(allDescr), dataTimeFile)
@@ -289,10 +296,29 @@ async function waitForDownloadVideo() {
   let finalPatch = ""
 
   while (finalPatch == "") {
-    await delay(1000); // Ждём 1 секунду
+    await delay(3000); // Ждём 2 секунды
 
     const files = await fsp.readdir(downloadsFolder);
+
+    const downlFiles = files.filter(file => path.extname(file) === '.crdownload');
     const mp4Files = files.filter(file => path.extname(file) === '.mp4');
+
+    // Если в папке Загрузки не появилось ни загружаемых файлов, ни загруженных
+    if (downlFiles.length === 0 && mp4Files === 0)  {
+      console.log("🔥 Файл недоступен для скачивания, переходим к следующему")
+
+      // Находим iframe на странице
+      const frameHandle = await page.$('#IframeErrorMessage');
+      const frame = await frameHandle.contentFrame();
+
+      // Теперь можно использовать 'frame' как 'page'
+      await frame.waitForSelector('#CloseButton', { timeout: 60000 });
+      await frame.click('#CloseButton');
+
+      return "000"
+    }
+
+    // console.log("files.length = " + files.length + ", files = " + files)
 
     if (mp4Files.length === 1) {
       let finalPath = path.join(downloadsFolder, mp4Files[0])
