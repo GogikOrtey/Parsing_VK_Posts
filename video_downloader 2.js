@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import fsp from 'fs/promises';
 import readline from 'readline';
+import moment from 'moment';
 
 
 
@@ -114,7 +115,7 @@ async function MainProcess() {
     for (let j = 1; j < item.length; j++) {
       // console.log(`Ссылка ${j}: ${item[j]}`);
 
-      await DownloadVideoFromURL(item[j], allDescr)
+      await DownloadVideoFromURL(item[j], allDescr, description)
     }
 
     console.log(`Обработка ${i + 1} элемента завершена`);
@@ -122,8 +123,28 @@ async function MainProcess() {
   }
 }
 
+// Функция, которая удаляет из полученной строки все недопустимые символы для именования файла
+// И укорачивает до 120 символов
+function sanitizeFilename2(filename) {
+  // Быстрые замены неликвидных символов. Что бы сохранить контекст, и попасть в рамки
+  filename = filename.replace(/:/g, "⁚");
+  filename = filename.replace(/\?/g, "‽");
+  filename = filename.replace(/\n/g, " ");
 
+  // Список недопустимых символов
+  const invalidChars = /[~!@#$%^&*()+={};':"\\|<>\/?]+/g;
 
+  // Удаление всех недопустимых символов
+  filename = filename.replace(invalidChars, '');
+
+  if (filename.length > 120) {
+    // Обрезаю строку до 120 символов, если она слишком длинная
+    filename = filename.substring(0, 120);
+    filename += "..."
+  }
+
+  return filename;
+}
 
 
 
@@ -156,7 +177,7 @@ async function MainProcess() {
 // DownloadVideoFromURL('https://vk.com/video-72495085_456242529')
 
 // Функция, которая открывает браузер, и дальше передаёт управление в другие функции
-async function DownloadVideoFromURL(inputURLVideo, allDescr) {
+async function DownloadVideoFromURL(inputURLVideo, allDescr, dataTimeFile) {
   let localMainCounter = 0; // Счётчик, который показывает, какое у нас сейчас состояние в коде
 
   try {
@@ -199,7 +220,7 @@ async function DownloadVideoFromURL(inputURLVideo, allDescr) {
 
     localMainCounter = 8; console.log(localMainCounter + ': Файл загружен');
 
-    await MooveVideoFileWithoutFloberDownload(filePatch, allDescr)
+    await MooveVideoFileWithoutFloberDownload(filePatch, sanitizeFilename2(allDescr), dataTimeFile)
 
     localMainCounter = 9; console.log(localMainCounter + ': Файл перемещён и переименован');
 
@@ -274,7 +295,7 @@ async function waitForDownloadVideo() {
 // MooveVideoFileWithoutFloberDownload('D:\\Загрузки\\Реакция кошек__.mp4', 'newFile222222')
 
 // Перемещает файл с именем patchVideoFile, в папку video/output, и переименовывает
-async function MooveVideoFileWithoutFloberDownload(patchVideoFile, newFileName) {
+async function MooveVideoFileWithoutFloberDownload(patchVideoFile, newFileName, dataTimeFile) {
 
   // Все \ заменяю на \\
   patchVideoFile = patchVideoFile.replace(/\\/g, '\\');
@@ -290,6 +311,16 @@ async function MooveVideoFileWithoutFloberDownload(patchVideoFile, newFileName) 
       console.error('Ошибка:', err);
     } else {
       console.log('Файл успешно перемещен и переименован!');
+
+      let formattedDateTime = dataTimeFile.replace(/\[|\]/g, '').replace('⁚', ':');
+      
+      // Получаем timestamp из formattedDateTime
+      let timestamp = moment(formattedDateTime, 'YYYY.MM.DD HH:mm').valueOf();
+      
+      // Устанавливаем время создания файла
+      fs.utimes(targetPath, timestamp / 1000, timestamp / 1000, (err) => {
+        if (err) throw err;
+      });
     }
   });
 }
