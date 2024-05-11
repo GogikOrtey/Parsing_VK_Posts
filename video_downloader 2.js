@@ -48,8 +48,10 @@ import puppeteer from 'puppeteer-core';
 
 
 
-
-
+// Функция для ожидания
+const delay = ms => new Promise(res => setTimeout(res, ms));
+// Использование: 
+// await delay(500);
 
 
 
@@ -78,43 +80,28 @@ async function DownloadVideoFromURL(inputURLVideo) {
 
     const page = await browser.newPage();
 
-    const pagePromise = page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd',
-      { waitUntil: 'load' });
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+    // const pagePromise = 
+    page.goto('https://www.downloadvideosfrom.com/ru/VK.php#GoogleBetweenAd', { waitUntil: 'load' });
 
     localMainCounter = 2; console.log(localMainCounter + ': Ждём 5 секунд, пока страница загрузится');
-
-    const result = await Promise.race([pagePromise, timeoutPromise]);
-    // await Promise.race([pagePromise, timeoutPromise]);
-
-    if (result === pagePromise) {
-      console.log('Страница загружена');
-    } else {
-      console.log('Время ожидания истекло');
-    }
+    
+    await delay(5000);
 
     localMainCounter = 3; console.log(localMainCounter + ': Идём дальше');
 
-    setTimeout(() => {
-      localMainCounter = 4;
-      console.log(localMainCounter + ': Вставляем текстовую строку в поле ввода с id="url"');
-
-      // page.evaluate(() => {
-      //   // document.querySelector('#url').value = 'https://vk.com/video-72495085_456242529';
-      //   document.querySelector('#url').value = inputURLVideo;
-      // });
-
-      page.evaluate((url) => {
-        document.querySelector('#url').value = url;
-      }, inputURLVideo);
-
-      setTimeout(() => {
-        localMainCounter = 5;
-        console.log(localMainCounter + ': Инициируем нажатие на кнопку с id="DownloadMP4HD"');
-        // Инициируем нажатие на кнопку с id="DownloadMP4HD"
-        page.click('#DownloadMP4HD');
-      }, 500);
-    }, 5000);
+    await delay(5000);
+    localMainCounter = 4;
+    console.log(localMainCounter + ': Вставляем текстовую строку в поле ввода с id="url"');
+  
+    page.evaluate((url) => {
+      document.querySelector('#url').value = url;
+    }, inputURLVideo);
+  
+    await delay(500);
+    localMainCounter = 5;
+    console.log(localMainCounter + ': Инициируем нажатие на кнопку с id="DownloadMP4HD"');
+    // Инициируем нажатие на кнопку с id="DownloadMP4HD"
+    page.click('#DownloadMP4HD');
 
   } catch (error) {
     console.error('Произошла Ошибка:', error);
@@ -123,8 +110,10 @@ async function DownloadVideoFromURL(inputURLVideo) {
 
 
 
+// Скачивает видео, уже с открытой страницы
+async function downloadVideoFromOpenedWebSite() {
 
-
+}
 
 
 
